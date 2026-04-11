@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Zuno Video Chat</title>
+  <style>
+    body { text-align: center; font-family: Arial; }
+    video { width: 300px; margin: 10px; background: black; }
+    button { padding: 10px 20px; font-size: 18px; }
+  </style>
+</head>
+<body>
+
+<h1>Zuno 🔥</h1>
+
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+
+<br><br>
+
+<button onclick="nextUser()">Next</button>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+let localStream;
+let peer;
+
+async function startCamera() {
+  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  document.getElementById("localVideo").srcObject = localStream;
+}
+
+startCamera();
+
+socket.on("matched", () => {
+  createPeer();
+});
+
+function createPeer() {
+  peer = new RTCPeerConnection();
+
+  localStream.getTracks().forEach(track => {
+    peer.addTrack(track, localStream);
+  });
+
+  peer.ontrack = (event) => {
+    document.getElementById("remoteVideo").srcObject = event.streams[0];
+  };
+
+  peer.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("signal", { candidate: event.candidate });
+    }
+  };
+
+  createOffer();
+}
+
+async function createOffer() {
+  const offer = await peer.createOffer();
+  await peer.setLocalDescription(offer);
+
+  socket.emit("signal", { sdp: peer.localDescription });
+}
+
+socket.on("signal", async (data) => {
+  if (!peer) createPeer();
+
+  if (data.sdp) {
+    await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
+    if (data.sdp.type === "offer") {
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+
+      socket.emit("signal", { sdp: peer.localDescription });
+    }
+  }
+
+  if (data.candidate) {
+    await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+  }
+});
+
+socket.on("partner-disconnected", () => {
+  if (peer) peer.close();
+  document.getElementById("remoteVideo").srcObject = null;
+});
+
+function nextUser() {
+  if (peer) peer.close();
+  document.getElementById("remoteVideo").srcObject = null;
+  socket.emit("next");
+}
+</script>
+
+</body>
+</html>

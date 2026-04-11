@@ -1,67 +1,68 @@
 ﻿const express = require("express");
-const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const http = require("http");
+const { Server } = require("socket.io");
 
-const PORT = process.env.PORT || 3000;
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
 app.use(express.static("public"));
 
-let waitingUsers = [];
+let waitingUser = null;
 
-io.on("connection", socket => {
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-  socket.on("start", (data) => {
-    socket.gender = data?.gender || "any";
+  if (waitingUser) {
+    socket.partner = waitingUser;
+    waitingUser.partner = socket;
 
-    let index = waitingUsers.findIndex(u =>
-      u.gender === "any" || socket.gender === "any" || u.gender === socket.gender
-    );
+    socket.emit("matched");
+    waitingUser.emit("matched");
 
-    if (index !== -1) {
-      let user = waitingUsers.splice(index, 1)[0];
+    waitingUser = null;
+  } else {
+    waitingUser = socket;
+  }
 
-      socket.partner = user;
-      user.partner = socket;
-
-      socket.emit("matched");
-      user.emit("matched");
-    } else {
-      waitingUsers.push(socket);
+  socket.on("signal", (data) => {
+    if (socket.partner) {
+      socket.partner.emit("signal", data);
     }
   });
-
-  socket.on("offer", d => socket.partner?.emit("offer", d));
-  socket.on("answer", d => socket.partner?.emit("answer", d));
-  socket.on("candidate", d => socket.partner?.emit("candidate", d));
-
-  socket.on("message", msg => socket.partner?.emit("message", msg));
 
   socket.on("next", () => {
     if (socket.partner) {
-      socket.partner.emit("next");
+      socket.partner.emit("partner-disconnected");
       socket.partner.partner = null;
-      socket.partner = null;
     }
-  });
 
-  socket.on("end", () => {
-    if (socket.partner) {
-      socket.partner.emit("end");
-      socket.partner.partner = null;
-      socket.partner = null;
+    socket.partner = null;
+
+    if (waitingUser) {
+      socket.partner = waitingUser;
+      waitingUser.partner = socket;
+
+      socket.emit("matched");
+      waitingUser.emit("matched");
+
+      waitingUser = null;
+    } else {
+      waitingUser = socket;
     }
   });
 
   socket.on("disconnect", () => {
     if (socket.partner) {
-      socket.partner.emit("end");
+      socket.partner.emit("partner-disconnected");
       socket.partner.partner = null;
     }
+
+    if (waitingUser === socket) {
+      waitingUser = null;
+    }
   });
-
 });
 
-http.listen(PORT, "0.0.0.0", () => {
-  console.log(`🔥 Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, () => console.log("Server running"));
