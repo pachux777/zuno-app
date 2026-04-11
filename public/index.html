@@ -1,126 +1,229 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-<title>Zuno</title>
+  <title>Zuno 🔥</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body {
-  margin: 0;
-  background: black;
-  color: white;
-  font-family: Arial;
-  text-align: center;
-}
+  <style>
+    body {
+      background: black;
+      color: white;
+      text-align: center;
+      font-family: Arial;
+    }
 
-/* MEME BACKGROUND */
-.bg {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  font-size: 50px;
-  opacity: 0.1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-  align-items: center;
-}
+    video {
+      width: 45%;
+      margin: 5px;
+      border-radius: 10px;
+      background: black;
+    }
 
-/* TITLE */
-h2 {
-  color: #0ff;
-  text-shadow: 0 0 20px #0ff;
-}
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      background: #00c6ff;
+      color: white;
+      font-weight: bold;
+    }
 
-/* SPLIT */
-.video-container {
-  display: flex;
-  width: 90%;
-  height: 380px;
-  margin: auto;
-  margin-top: 20px;
-  gap: 10px;
-}
+    input {
+      padding: 8px;
+      margin: 5px;
+    }
 
-.video-box {
-  flex: 1;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 0 30px #0ff;
-  background: black;
-}
-
-video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* BUTTON */
-button {
-  margin: 10px;
-  padding: 12px 25px;
-  border-radius: 20px;
-  border: none;
-  background: linear-gradient(45deg, cyan, blue);
-  color: white;
-  font-weight: bold;
-}
-
-/* CHAT */
-#chat {
-  width: 80%;
-  margin: 20px auto;
-  height: 150px;
-  overflow-y: auto;
-  background: #111;
-  border-radius: 10px;
-  padding: 10px;
-}
-
-input {
-  padding: 10px;
-  border-radius: 10px;
-}
-</style>
+    #chatBox {
+      height: 150px;
+      overflow-y: auto;
+      border: 1px solid gray;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="bg">
-  😂 😎 😍 😢 😡 🤯 👻 🤖 😂 😎 😍 😢 😡 🤯 👻 🤖
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <h2>Enter your name</h2>
+  <input id="username" placeholder="Your name" />
+  <br><br>
+  <button onclick="login()">Start Chat</button>
 </div>
 
-<h2>⚡ Zuno ⚡</h2>
+<!-- MAIN APP -->
+<div id="app" style="display:none;">
 
-<select id="gender">
-  <option value="any">Any</option>
-  <option value="male">Male</option>
-  <option value="female">Female</option>
-</select>
+  <h1>⚡ Zuno ⚡</h1>
+  <h3 id="status">Ready</h3>
 
-<div class="video-container">
-  <div class="video-box">
-    <video id="me" autoplay muted></video>
-  </div>
+  <video id="localVideo" autoplay muted></video>
+  <video id="remoteVideo" autoplay></video>
 
-  <div class="video-box">
-    <video id="stranger" autoplay></video>
-  </div>
+  <br>
+
+  <button onclick="startChat()">Start</button>
+  <button onclick="nextUser()">Next</button>
+  <button onclick="endChat()">End</button>
+
+  <br><br>
+
+  <input id="msgInput" placeholder="Type message..." />
+  <button onclick="sendMsg()">Send</button>
+
+  <div id="chatBox"></div>
+
 </div>
-
-<button onclick="startChat()">Start</button>
-<button onclick="nextUser()">Next</button>
-<button onclick="endChat()">End</button>
-
-<div id="chat"></div>
-
-<input id="msg" placeholder="Type message">
-<button onclick="sendMsg()">Send</button>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
+
+<script>
+let socket;
+let localStream;
+let peer;
+
+// 🔐 LOGIN
+function login() {
+  const name = document.getElementById("username").value;
+
+  if (!name) {
+    alert("Enter your name!");
+    return;
+  }
+
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  socket = io();
+  socket.emit("set-name", name);
+
+  setupSocket();
+}
+
+// 🎥 CAMERA
+async function startCamera() {
+  localStream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  });
+
+  document.getElementById("localVideo").srcObject = localStream;
+}
+
+// ▶ START CHAT
+function startChat() {
+  startCamera();
+  socket.emit("start");
+  document.getElementById("status").innerText = "Searching...";
+}
+
+// 🔌 SOCKET EVENTS
+function setupSocket() {
+
+  socket.on("matched", () => {
+    document.getElementById("status").innerText = "Connected 🔥";
+    createPeer();
+  });
+
+  socket.on("signal", async (data) => {
+    if (!peer) createPeer();
+
+    if (data.sdp) {
+      await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
+      if (data.sdp.type === "offer") {
+        const answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+        socket.emit("signal", { sdp: peer.localDescription });
+      }
+    }
+
+    if (data.candidate) {
+      await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+
+  socket.on("message", (data) => {
+    addMessage(data.name + ": " + data.text);
+  });
+
+  socket.on("typing", () => {
+    document.getElementById("status").innerText = "Typing...";
+  });
+
+  socket.on("partner-disconnected", () => {
+    document.getElementById("status").innerText = "Searching...";
+    if (peer) peer.close();
+    document.getElementById("remoteVideo").srcObject = null;
+  });
+}
+
+// 🔗 WEBRTC
+function createPeer() {
+  peer = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  });
+
+  localStream.getTracks().forEach(track => {
+    peer.addTrack(track, localStream);
+  });
+
+  peer.ontrack = (e) => {
+    document.getElementById("remoteVideo").srcObject = e.streams[0];
+  };
+
+  peer.onicecandidate = (e) => {
+    if (e.candidate) {
+      socket.emit("signal", { candidate: e.candidate });
+    }
+  };
+
+  peer.createOffer().then(offer => {
+    peer.setLocalDescription(offer);
+    socket.emit("signal", { sdp: offer });
+  });
+}
+
+// 💬 SEND MESSAGE
+function sendMsg() {
+  const input = document.getElementById("msgInput");
+
+  socket.emit("message", input.value);
+  addMessage("You: " + input.value);
+
+  input.value = "";
+}
+
+// 💬 ADD MESSAGE
+function addMessage(msg) {
+  const div = document.createElement("div");
+  div.innerText = msg;
+  document.getElementById("chatBox").appendChild(div);
+}
+
+// ⌨ TYPING
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("msgInput").addEventListener("input", () => {
+    if (socket) socket.emit("typing");
+  });
+});
+
+// ⏭ NEXT USER
+function nextUser() {
+  if (peer) peer.close();
+  socket.emit("next");
+  document.getElementById("remoteVideo").srcObject = null;
+}
+
+// ❌ END CHAT
+function endChat() {
+  if (peer) peer.close();
+  if (socket) socket.disconnect();
+  document.getElementById("remoteVideo").srcObject = null;
+}
+</script>
 
 </body>
 </html>
