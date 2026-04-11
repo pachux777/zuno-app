@@ -8,26 +8,56 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-let waitingUser = null;
+let waitingUsers = [];
+
+function findMatch(socket) {
+  for (let i = 0; i < waitingUsers.length; i++) {
+    let user = waitingUsers[i];
+
+    if (
+      user !== socket &&
+      (user.gender === socket.gender ||
+        user.gender === "Any" ||
+        socket.gender === "Any")
+    ) {
+      waitingUsers.splice(i, 1);
+
+      socket.partner = user;
+      user.partner = socket;
+
+      socket.emit("matched");
+      user.emit("matched");
+
+      return;
+    }
+  }
+
+  waitingUsers.push(socket);
+}
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  if (waitingUser) {
-    socket.partner = waitingUser;
-    waitingUser.partner = socket;
-
-    socket.emit("matched");
-    waitingUser.emit("matched");
-
-    waitingUser = null;
-  } else {
-    waitingUser = socket;
-  }
+  socket.on("start", (gender) => {
+    socket.gender = gender;
+    findMatch(socket);
+  });
 
   socket.on("signal", (data) => {
     if (socket.partner) {
       socket.partner.emit("signal", data);
+    }
+  });
+
+  socket.on("message", (msg) => {
+    if (socket.partner) {
+      socket.partner.emit("message", msg);
+    }
+  });
+
+  socket.on("typing", () => {
+    if (socket.partner) {
+      socket.partner.emit("typing");
     }
   });
 
@@ -38,18 +68,7 @@ io.on("connection", (socket) => {
     }
 
     socket.partner = null;
-
-    if (waitingUser) {
-      socket.partner = waitingUser;
-      waitingUser.partner = socket;
-
-      socket.emit("matched");
-      waitingUser.emit("matched");
-
-      waitingUser = null;
-    } else {
-      waitingUser = socket;
-    }
+    findMatch(socket);
   });
 
   socket.on("disconnect", () => {
@@ -58,9 +77,7 @@ io.on("connection", (socket) => {
       socket.partner.partner = null;
     }
 
-    if (waitingUser === socket) {
-      waitingUser = null;
-    }
+    waitingUsers = waitingUsers.filter((u) => u !== socket);
   });
 });
 

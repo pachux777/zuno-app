@@ -1,97 +1,152 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-  <title>Zuno Video Chat</title>
+  <title>Zuno 🔥</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    body { text-align: center; font-family: Arial; }
-    video { width: 300px; margin: 10px; background: black; }
-    button { padding: 10px 20px; font-size: 18px; }
+    body { background: black; color: white; text-align: center; font-family: Arial; }
+    video { width: 45%; background: black; margin: 5px; border-radius: 10px; }
+    button { padding: 10px 20px; margin: 5px; }
+    #chatBox { height: 150px; overflow-y: auto; border: 1px solid gray; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-<h1>Zuno 🔥</h1>
+<h1>⚡ Zuno ⚡</h1>
+
+<select id="gender">
+  <option>Any</option>
+  <option>Male</option>
+  <option>Female</option>
+</select>
+
+<h3 id="status">Click Start</h3>
 
 <video id="localVideo" autoplay muted></video>
 <video id="remoteVideo" autoplay></video>
 
-<br><br>
+<br>
 
+<button onclick="startChat()">Start</button>
 <button onclick="nextUser()">Next</button>
+<button onclick="endChat()">End</button>
+
+<div>
+  <input id="msgInput" placeholder="Type message..." />
+  <button onclick="sendMsg()">Send</button>
+</div>
+
+<div id="chatBox"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
-
+let socket;
 let localStream;
 let peer;
+
+const sound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
 
 async function startCamera() {
   localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
   document.getElementById("localVideo").srcObject = localStream;
 }
 
-startCamera();
+function startChat() {
+  socket = io();
 
-socket.on("matched", () => {
-  createPeer();
-});
+  startCamera();
 
-function createPeer() {
-  peer = new RTCPeerConnection();
+  const gender = document.getElementById("gender").value;
 
-  localStream.getTracks().forEach(track => {
-    peer.addTrack(track, localStream);
+  socket.emit("start", gender);
+  document.getElementById("status").innerText = "Searching...";
+
+  socket.on("matched", () => {
+    document.getElementById("status").innerText = "Connected 🔥";
+    sound.play();
+    createPeer();
   });
 
-  peer.ontrack = (event) => {
-    document.getElementById("remoteVideo").srcObject = event.streams[0];
-  };
+  socket.on("signal", async (data) => {
+    if (!peer) createPeer();
 
-  peer.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.emit("signal", { candidate: event.candidate });
+    if (data.sdp) {
+      await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
+      if (data.sdp.type === "offer") {
+        const answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+        socket.emit("signal", { sdp: peer.localDescription });
+      }
     }
-  };
 
-  createOffer();
+    if (data.candidate) {
+      await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+
+  socket.on("message", (msg) => addMessage("Stranger: " + msg));
+
+  socket.on("typing", () => {
+    document.getElementById("status").innerText = "Typing...";
+  });
+
+  socket.on("partner-disconnected", () => {
+    document.getElementById("status").innerText = "Searching...";
+    if (peer) peer.close();
+    document.getElementById("remoteVideo").srcObject = null;
+  });
 }
 
-async function createOffer() {
-  const offer = await peer.createOffer();
-  await peer.setLocalDescription(offer);
+function createPeer() {
+  peer = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  });
 
-  socket.emit("signal", { sdp: peer.localDescription });
+  localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+
+  peer.ontrack = e => {
+    document.getElementById("remoteVideo").srcObject = e.streams[0];
+  };
+
+  peer.onicecandidate = e => {
+    if (e.candidate) socket.emit("signal", { candidate: e.candidate });
+  };
+
+  peer.createOffer().then(offer => {
+    peer.setLocalDescription(offer);
+    socket.emit("signal", { sdp: offer });
+  });
 }
 
-socket.on("signal", async (data) => {
-  if (!peer) createPeer();
+function sendMsg() {
+  const input = document.getElementById("msgInput");
+  socket.emit("message", input.value);
+  addMessage("You: " + input.value);
+  input.value = "";
+}
 
-  if (data.sdp) {
-    await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+function addMessage(msg) {
+  const div = document.createElement("div");
+  div.innerText = msg;
+  document.getElementById("chatBox").appendChild(div);
+}
 
-    if (data.sdp.type === "offer") {
-      const answer = await peer.createAnswer();
-      await peer.setLocalDescription(answer);
-
-      socket.emit("signal", { sdp: peer.localDescription });
-    }
-  }
-
-  if (data.candidate) {
-    await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
-  }
-});
-
-socket.on("partner-disconnected", () => {
-  if (peer) peer.close();
-  document.getElementById("remoteVideo").srcObject = null;
+document.getElementById("msgInput").addEventListener("input", () => {
+  socket.emit("typing");
 });
 
 function nextUser() {
   if (peer) peer.close();
-  document.getElementById("remoteVideo").srcObject = null;
   socket.emit("next");
+  document.getElementById("remoteVideo").srcObject = null;
+}
+
+function endChat() {
+  if (peer) peer.close();
+  if (socket) socket.disconnect();
+  document.getElementById("remoteVideo").srcObject = null;
 }
 </script>
 
