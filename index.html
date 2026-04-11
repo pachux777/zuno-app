@@ -5,23 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body { background: black; color: white; text-align: center; font-family: Arial; }
-    video { width: 45%; background: black; margin: 5px; border-radius: 10px; }
-    button { padding: 10px 20px; margin: 5px; }
-    #chatBox { height: 150px; overflow-y: auto; border: 1px solid gray; margin-top: 10px; }
+    body { background:black; color:white; text-align:center; font-family:Arial; }
+    video { width:45%; margin:5px; border-radius:10px; }
+    button { padding:10px 20px; margin:5px; }
+    #chatBox { height:150px; overflow:auto; border:1px solid gray; }
   </style>
 </head>
 <body>
 
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <h2>Enter your name</h2>
+  <input id="username" placeholder="Your name" />
+  <br><br>
+  <button onclick="login()">Start Chat</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none;">
+
 <h1>⚡ Zuno ⚡</h1>
-
-<select id="gender">
-  <option>Any</option>
-  <option>Male</option>
-  <option>Female</option>
-</select>
-
-<h3 id="status">Click Start</h3>
+<h3 id="status">Ready</h3>
 
 <video id="localVideo" autoplay muted></video>
 <video id="remoteVideo" autoplay></video>
@@ -39,32 +43,48 @@
 
 <div id="chatBox"></div>
 
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
 let socket;
 let localStream;
 let peer;
+let myName = "";
 
-const sound = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
+function login() {
+  const name = document.getElementById("username").value;
+
+  if (!name) {
+    alert("Enter name!");
+    return;
+  }
+
+  myName = name;
+
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  socket = io();
+  socket.emit("set-name", myName);
+
+  setupSocket();
+}
 
 async function startCamera() {
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
   document.getElementById("localVideo").srcObject = localStream;
 }
 
 function startChat() {
-  socket = io();
-
   startCamera();
-
-  const gender = document.getElementById("gender").value;
-
-  socket.emit("start", gender);
+  socket.emit("start");
   document.getElementById("status").innerText = "Searching...";
+}
 
+function setupSocket() {
   socket.on("matched", () => {
     document.getElementById("status").innerText = "Connected 🔥";
-    sound.play();
     createPeer();
   });
 
@@ -86,7 +106,9 @@ function startChat() {
     }
   });
 
-  socket.on("message", (msg) => addMessage("Stranger: " + msg));
+  socket.on("message", (data) => {
+    addMessage(data.name + ": " + data.text);
+  });
 
   socket.on("typing", () => {
     document.getElementById("status").innerText = "Typing...";
@@ -122,8 +144,10 @@ function createPeer() {
 
 function sendMsg() {
   const input = document.getElementById("msgInput");
+
   socket.emit("message", input.value);
   addMessage("You: " + input.value);
+
   input.value = "";
 }
 
@@ -145,7 +169,7 @@ function nextUser() {
 
 function endChat() {
   if (peer) peer.close();
-  if (socket) socket.disconnect();
+  socket.disconnect();
   document.getElementById("remoteVideo").srcObject = null;
 }
 </script>

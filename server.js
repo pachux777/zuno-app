@@ -14,12 +14,7 @@ function findMatch(socket) {
   for (let i = 0; i < waitingUsers.length; i++) {
     let user = waitingUsers[i];
 
-    if (
-      user !== socket &&
-      (user.gender === socket.gender ||
-        user.gender === "Any" ||
-        socket.gender === "Any")
-    ) {
+    if (user !== socket) {
       waitingUsers.splice(i, 1);
 
       socket.partner = user;
@@ -27,19 +22,18 @@ function findMatch(socket) {
 
       socket.emit("matched");
       user.emit("matched");
-
       return;
     }
   }
-
   waitingUsers.push(socket);
 }
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  socket.on("set-name", (name) => {
+    socket.name = name;
+  });
 
-  socket.on("start", (gender) => {
-    socket.gender = gender;
+  socket.on("start", () => {
     findMatch(socket);
   });
 
@@ -51,7 +45,10 @@ io.on("connection", (socket) => {
 
   socket.on("message", (msg) => {
     if (socket.partner) {
-      socket.partner.emit("message", msg);
+      socket.partner.emit("message", {
+        name: socket.name || "Stranger",
+        text: msg
+      });
     }
   });
 
@@ -66,7 +63,6 @@ io.on("connection", (socket) => {
       socket.partner.emit("partner-disconnected");
       socket.partner.partner = null;
     }
-
     socket.partner = null;
     findMatch(socket);
   });
@@ -76,8 +72,7 @@ io.on("connection", (socket) => {
       socket.partner.emit("partner-disconnected");
       socket.partner.partner = null;
     }
-
-    waitingUsers = waitingUsers.filter((u) => u !== socket);
+    waitingUsers = waitingUsers.filter(u => u !== socket);
   });
 });
 
