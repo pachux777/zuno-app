@@ -1,10 +1,13 @@
 let socket, peer, localStream;
-
 let coins = parseInt(localStorage.getItem("coins")) || 0;
+
 updateCoins();
 
 function login(){
+  let name = document.getElementById("name").value;
   let age = document.getElementById("age").value;
+
+  if(!name || !age) return alert("Enter all details");
   if(age < 18) return alert("18+ only");
 
   loginPage.style.display="none";
@@ -16,26 +19,14 @@ function login(){
 
 // COINS
 function updateCoins(){
-  coinCount.innerText = coins;
+  document.getElementById("coins").innerText = coins;
   localStorage.setItem("coins",coins);
 }
 
-// WATCH AD
 function watchAd(){
   alert("Ad watched +20 coins");
   coins += 20;
   updateCoins();
-}
-
-// PREMIUM UI
-function openPremium(){ premiumUI.style.display="flex"; }
-function closePremium(){ premiumUI.style.display="none"; }
-
-function buy(cost,hours){
-  if(coins < cost) return alert("Not enough coins");
-  coins -= cost;
-  updateCoins();
-  alert("Premium "+hours+" hours activated");
 }
 
 // CAMERA
@@ -55,6 +46,7 @@ function setupSocket(){
 
     if(data.sdp){
       await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
       if(data.sdp.type==="offer"){
         let ans = await peer.createAnswer();
         await peer.setLocalDescription(ans);
@@ -96,8 +88,9 @@ function createPeer(){
 
 // CHAT
 function sendMsg(){
-  let msg = msgInput.value;
+  let msg = document.getElementById("msg").value;
   if(!msg) return;
+
   socket.emit("message",msg);
 }
 
