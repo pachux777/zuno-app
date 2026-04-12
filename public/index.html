@@ -5,28 +5,32 @@
 
 <style>
 body{
-  background:#111;
+  background:linear-gradient(45deg,#000,#001f2f);
   color:white;
   text-align:center;
   font-family:Arial;
 }
 
+/* TOP BAR */
 .topbar{
   display:flex;
   justify-content:space-between;
   padding:10px;
-  background:#000;
 }
 
+/* BUTTON STYLE */
 button{
-  padding:8px;
+  padding:10px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   cursor:pointer;
+  transition:0.2s;
 }
+button:active{ transform:scale(0.9); }
 
-.coin{ background:gold; color:black; }
-.premium{ background:cyan; }
+.coin{background:gold;color:black;}
+.premium{background:cyan;}
+.report{background:red;color:white;}
 
 #videoBox{
   display:flex;
@@ -38,11 +42,13 @@ video{
   width:320px;
   height:240px;
   background:black;
+  border-radius:10px;
 }
 
+/* SHOP */
 #shop{
   display:none;
-  background:#222;
+  background:#111;
   padding:10px;
   margin:10px;
 }
@@ -63,27 +69,38 @@ video{
 <div id="app" style="display:none;">
 
 <div class="topbar">
-  <div>
-    🪙 <span id="coinCount">0</span>
-    <button class="coin" onclick="watchAd()">+20</button>
-  </div>
 
-  <div>
-    <button class="premium" onclick="toggleShop()">💎 Shop</button>
-  </div>
+<div>
+🪙 <span id="coinCount">0</span>
+<button class="coin" onclick="watchAd()">+20</button>
+</div>
+
+<div>
+<button onclick="showHistory()">💬</button>
+<button class="premium" onclick="toggleShop()">💎</button>
+<button class="report" onclick="reportUser()">🚨</button>
+</div>
+
 </div>
 
 <div id="shop">
-  <button onclick="buyPremium(100,2)">2H (100)</button>
-  <button onclick="buyPremium(500,10)">10H (500)</button>
-  <button onclick="buyPremium(1000,24)">24H (1000)</button>
+<button onclick="buyPremium(100,2)">2H - 100</button>
+<button onclick="buyPremium(500,10)">10H - 500</button>
+<button onclick="buyPremium(1000,24)">24H - 1000</button>
 </div>
 
 <h3 id="status">Ready</h3>
 
 <div id="videoBox">
-  <video id="localVideo" autoplay muted></video>
-  <video id="remoteVideo" autoplay></video>
+<div>
+<h3>YOU</h3>
+<video id="localVideo" autoplay muted></video>
+</div>
+
+<div>
+<h3>STRANGER</h3>
+<video id="remoteVideo" autoplay></video>
+</div>
 </div>
 
 <br>
