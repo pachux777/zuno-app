@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Zuno Pro 🔥</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      background: #0a0a0a;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+    }
+
+    h1 { color: cyan; }
+
+    .box {
+      background: #111;
+      padding: 20px;
+      border-radius: 15px;
+      margin: 10px;
+      box-shadow: 0 0 20px cyan;
+    }
+
+    video {
+      width: 45%;
+      border-radius: 15px;
+      background: black;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(45deg, cyan, blue);
+      color: white;
+      font-weight: bold;
+    }
+
+    input, select {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    #chatBox {
+      height: 120px;
+      overflow-y: auto;
+      border: 1px solid gray;
+      margin-top: 10px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+    }
+
+    .big-video video {
+      width: 90% !important;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="box">
+  <h2>Join Zuno 🔥</h2>
+
+  <input id="username" placeholder="Enter your name"><br>
+  <input id="age" type="number" placeholder="Enter your age"><br>
+
+  <button onclick="login()">Enter</button>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+<div class="top-bar">
+  <button onclick="coins()">🪙 Coins</button>
+  <button onclick="toggleTheater()">🎬 Theater</button>
+  <button onclick="reportUser()">🚫 Report</button>
+</div>
+
+<h1>Zuno Pro ⚡</h1>
+<h3 id="status">Ready</h3>
+
+<select id="gender">
+  <option>Any</option>
+  <option disabled>Male (Premium)</option>
+  <option disabled>Female (Premium)</option>
+</select>
+
+<div id="videoBox">
+  <video id="localVideo" autoplay muted></video>
+  <video id="remoteVideo" autoplay></video>
+</div>
+
+<br>
+
+<button onclick="startChat()">Start</button>
+<button onclick="nextUser()">Next</button>
+<button onclick="endChat()">End</button>
+
+<br><br>
+
+<input id="msgInput" placeholder="Message">
+<button onclick="sendMsg()">Send</button>
+
+<div id="chatBox"></div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+let socket;
+let peer;
+let localStream;
+
+// 🔐 LOGIN
+function login() {
+  const name = document.getElementById("username").value;
+  const age = document.getElementById("age").value;
+
+  if (!name || !age) {
+    alert("Fill all fields");
+    return;
+  }
+
+  if (age < 18) {
+    alert("You must be 18+ to use this app");
+    return;
+  }
+
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  socket = io();
+  socket.emit("set-name", name);
+
+  setupSocket();
+}
+
+// 🎥 CAMERA
+async function startCamera() {
+  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  localVideo.srcObject = localStream;
+}
+
+// ▶ START
+function startChat() {
+  startCamera();
+  socket.emit("start");
+  status.innerText = "Searching...";
+}
+
+// 🔌 SOCKET
+function setupSocket() {
+  socket.on("matched", () => {
+    status.innerText = "Connected 🔥";
+    createPeer();
+  });
+
+  socket.on("signal", async (data) => {
+    if (!peer) createPeer();
+
+    if (data.sdp) {
+      await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+      if (data.sdp.type === "offer") {
+        let answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+        socket.emit("signal", {sdp: peer.localDescription});
+      }
+    }
+
+    if (data.candidate) {
+      await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+
+  socket.on("message", (data) => {
+    addMessage(data.name + ": " + data.text);
+  });
+
+  socket.on("partner-disconnected", () => {
+    status.innerText = "Searching...";
+    if (peer) peer.close();
+    remoteVideo.srcObject = null;
+  });
+}
+
+// 🔗 WEBRTC
+function createPeer() {
+  peer = new RTCPeerConnection({
+    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+  });
+
+  localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
+
+  peer.ontrack = e => remoteVideo.srcObject = e.streams[0];
+
+  peer.onicecandidate = e => {
+    if(e.candidate) socket.emit("signal",{candidate:e.candidate});
+  };
+
+  peer.createOffer().then(o=>{
+    peer.setLocalDescription(o);
+    socket.emit("signal",{sdp:o});
+  });
+}
+
+// 💬 CHAT
+function sendMsg(){
+  socket.emit("message", msgInput.value);
+  addMessage("You: "+msgInput.value);
+  msgInput.value="";
+}
+
+function addMessage(msg){
+  let d=document.createElement("div");
+  d.innerText=msg;
+  chatBox.appendChild(d);
+}
+
+// 🎬 THEATER MODE
+function toggleTheater(){
+  document.getElementById("videoBox").classList.toggle("big-video");
+}
+
+// 🪙 COINS
+function coins(){
+  alert("Watch ads to earn coins (coming soon)");
+}
+
+// 🚫 REPORT
+function reportUser(){
+  alert("User reported. Thank you for keeping Zuno safe.");
+}
+
+// ⏭ NEXT
+function nextUser(){
+  if(peer) peer.close();
+  socket.emit("next");
+}
+
+// ❌ END
+function endChat(){
+  if(peer) peer.close();
+  socket.disconnect();
+}
+</script>
+
+</body>
+</html>
