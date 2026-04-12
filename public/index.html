@@ -1,74 +1,106 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Zuno</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zuno</title>
 
-  <style>
-    body {
-      background:#0a0a0a;
-      color:white;
-      font-family:Arial;
-      text-align:center;
-    }
+<style>
+body{
+  background:linear-gradient(45deg,#000,#001f2f);
+  color:white;
+  text-align:center;
+  font-family:Arial;
+}
 
-    #videoBox {
-      display:flex;
-      justify-content:center;
-      gap:20px;
-      margin-top:20px;
-    }
+/* floating emoji background */
+body::before{
+  content:"🔥 💬 🎥 💎 🪙 🚀 😎";
+  position:fixed;
+  font-size:40px;
+  opacity:0.05;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+}
 
-    video {
-      width:320px;
-      height:240px;
-      border-radius:10px;
-      background:black;
-    }
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+}
 
-    button {
-      padding:10px;
-      margin:5px;
-      border-radius:10px;
-      border:none;
-      background:cyan;
-      color:black;
-      font-weight:bold;
-    }
+.left{
+  display:flex;
+  gap:5px;
+}
 
-    input {
-      padding:10px;
-      margin:5px;
-    }
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:cyan;
+  cursor:pointer;
+  transition:0.2s;
+}
 
-    #chatBox {
-      height:120px;
-      overflow:auto;
-      border:1px solid gray;
-      width:60%;
-      margin:auto;
-    }
+/* click animation */
+button:active{
+  transform:scale(0.9);
+}
 
-    @media (max-width:768px){
-      #videoBox { flex-direction:column; }
-    }
-  </style>
+#premiumBtn{
+  background:gold;
+}
+
+#videoBox{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+}
+
+video{
+  width:320px;
+  height:240px;
+  background:black;
+  border-radius:10px;
+}
+
+#chatBox{
+  height:120px;
+  overflow:auto;
+  border:1px solid gray;
+  width:60%;
+  margin:auto;
+}
+</style>
 </head>
 
 <body>
 
 <!-- LOGIN -->
 <div id="loginPage">
-  <h1>ZUNO</h1>
-  <input id="username" placeholder="Name"><br>
-  <input id="age" type="number" placeholder="Age"><br>
-  <button onclick="login()">Enter</button>
+<h1>ZUNO</h1>
+<input id="username" placeholder="Name"><br>
+<input id="age" type="number" placeholder="Age"><br>
+<button onclick="login()">Enter</button>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none;">
 
-<h1>ZUNO</h1>
+<div class="topbar">
+  <div class="left">
+    <button onclick="coins()">🪙</button>
+    <button onclick="showHistory()">💬</button>
+  </div>
+
+  <div>
+    <button id="premiumBtn">💎</button>
+    <button onclick="reportUser()">🚨</button>
+  </div>
+</div>
+
+<h2 id="status">Ready</h2>
 
 <div id="videoBox">
   <div>
