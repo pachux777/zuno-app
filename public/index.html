@@ -10,7 +10,7 @@ body{
   font-family:Arial;
   background:linear-gradient(135deg,#000,#0f2027,#203a43);
   color:white;
-  overflow:hidden; /* 🔥 prevent scroll */
+  overflow:hidden;
 }
 
 /* LOGIN */
@@ -76,9 +76,9 @@ input{
   gap:20px;
 }
 
-/* 🔥 PERFECT CAMERA FIX */
+/* CAMERA */
 .videoBox{
-  width:min(38vh, 380px);   /* responsive size */
+  width:min(38vh, 380px);
   height:min(38vh, 380px);
   background:black;
   border-radius:20px;
@@ -127,6 +127,13 @@ button:hover{
   text-align:center;
 }
 
+/* TOGGLE BUTTONS */
+.toggleBtns{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+}
+
 /* MODAL */
 .modal{
   display:none;
@@ -137,6 +144,15 @@ button:hover{
   background:#222;
   padding:20px;
   border-radius:10px;
+}
+
+.closeBtn{
+  position:absolute;
+  top:5px;
+  right:10px;
+  cursor:pointer;
+  color:red;
+  font-weight:bold;
 }
 
 /* MOBILE */
@@ -169,16 +185,15 @@ button:hover{
 
 <!-- TERMS -->
 <div id="terms" class="modal">
+<span class="closeBtn" onclick="closeTerms()">✖</span>
 <h3>Terms & Policy</h3>
 <p>18+ only. No abuse. No nudity. Respect others.</p>
-<button onclick="closeTerms()">Close</button>
 </div>
 
-<!-- MAIN APP -->
+<!-- MAIN -->
 <div id="app">
 
 <div class="top">
-
 <div class="left">
 <button onclick="watchAd()">Ads</button>
 </div>
@@ -190,7 +205,6 @@ button:hover{
 <button onclick="openReport()">Report</button>
 <button onclick="loadHistory()">History</button>
 </div>
-
 </div>
 
 <div id="main">
@@ -206,40 +220,55 @@ button:hover{
 <video id="stranger" autoplay></video>
 </div>
 
+<!-- CAMERA + MIC -->
+<div class="toggleBtns">
+<button onclick="toggleCam()">🎥 Camera</button>
+<button onclick="toggleMic()">🎤 Mic</button>
+</div>
+
+<!-- CONTROLS -->
 <div class="controls">
 <button onclick="start()">Start</button>
 <button onclick="next()">Next (-2)</button>
 <button onclick="end()">End</button>
+
+<br><br>
+
+<select id="gender">
+<option>All</option>
+<option>Boys</option>
+<option>Girls</option>
+</select>
+
 </div>
 
 </div>
 
 <!-- CHAT -->
 <div id="chatSide">
-
 <div id="chat"></div>
 
 <div class="chatInput">
 <input id="msg">
 <button onclick="send()">Send</button>
 </div>
-
 </div>
 
 </div>
-
 </div>
 
 <!-- PREMIUM -->
 <div id="premiumBox" class="modal">
+<span class="closeBtn" onclick="premiumBox.style.display='none'">✖</span>
 <h3>Premium</h3>
-<button onclick="buy(200,2)">Platinum (2h)</button>
-<button onclick="buy(500,10)">Gold (10h)</button>
-<button onclick="buy(1000,24)">Diamond (24h)</button>
+<button onclick="buy(200,2)">Platinum</button>
+<button onclick="buy(500,10)">Gold</button>
+<button onclick="buy(1000,24)">Diamond</button>
 </div>
 
 <!-- REPORT -->
 <div id="reportBox" class="modal">
+<span class="closeBtn" onclick="reportBox.style.display='none'">✖</span>
 <h3>Report</h3>
 <button onclick="ban()">Nudity</button>
 <button onclick="ban()">Violence</button>
@@ -248,12 +277,44 @@ button:hover{
 
 <!-- HISTORY -->
 <div id="historyBox" class="modal">
+<span class="closeBtn" onclick="historyBox.style.display='none'">✖</span>
 <h3>History</h3>
 <ul id="historyList"></ul>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
+
+<script>
+let stream;
+
+/* CAMERA */
+async function start(){
+  stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  me.srcObject = stream;
+  socket.emit("start");
+}
+
+/* END FIX */
+function end(){
+  if(stream){
+    stream.getTracks().forEach(track=>track.stop());
+    me.srcObject=null;
+  }
+  socket.emit("end");
+}
+
+/* TOGGLE */
+function toggleCam(){
+  stream.getVideoTracks()[0].enabled =
+  !stream.getVideoTracks()[0].enabled;
+}
+
+function toggleMic(){
+  stream.getAudioTracks()[0].enabled =
+  !stream.getAudioTracks()[0].enabled;
+}
+</script>
 
 </body>
 </html>
