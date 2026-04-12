@@ -10,6 +10,7 @@ body{
   font-family:Arial;
   background:linear-gradient(135deg,#000,#0f2027,#203a43);
   color:white;
+  overflow:hidden; /* 🔥 prevent scroll */
 }
 
 /* LOGIN */
@@ -62,6 +63,7 @@ input{
 #main{
   flex:1;
   display:flex;
+  height:calc(100vh - 60px);
 }
 
 /* VIDEO SIDE */
@@ -71,16 +73,17 @@ input{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:15px;
+  gap:20px;
 }
 
-/* 🔥 SQUARE CAMERA */
+/* 🔥 PERFECT CAMERA FIX */
 .videoBox{
-  width:300px;
-  height:300px;
+  width:min(38vh, 380px);   /* responsive size */
+  height:min(38vh, 380px);
   background:black;
-  border-radius:15px;
+  border-radius:20px;
   overflow:hidden;
+  box-shadow:0 0 15px rgba(0,255,255,0.2);
 }
 
 .videoBox video{
@@ -143,6 +146,11 @@ button:hover{
   }
   #videoSide, #chatSide{
     width:100%;
+  }
+
+  .videoBox{
+    width:80vw;
+    height:80vw;
   }
 }
 </style>
