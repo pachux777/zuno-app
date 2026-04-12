@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -22,6 +22,7 @@ function findMatch(socket) {
 
       socket.emit("matched");
       user.emit("matched");
+
       return;
     }
   }
@@ -30,6 +31,9 @@ function findMatch(socket) {
 }
 
 io.on("connection", (socket) => {
+
+  console.log("User connected:", socket.id);
+
   socket.on("set-name", (name) => {
     socket.name = name;
   });
@@ -53,29 +57,30 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("typing", () => {
-    if (socket.partner) {
-      socket.partner.emit("typing");
-    }
-  });
-
   socket.on("next", () => {
     if (socket.partner) {
       socket.partner.emit("partner-disconnected");
       socket.partner.partner = null;
     }
+
     socket.partner = null;
     findMatch(socket);
   });
 
   socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+
     if (socket.partner) {
       socket.partner.emit("partner-disconnected");
       socket.partner.partner = null;
     }
+
     waitingUsers = waitingUsers.filter(u => u !== socket);
   });
+
 });
 
 const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => console.log("Server running on port", PORT));
+server.listen(PORT, () => {
+  console.log("🚀 Server running on port", PORT);
+});
