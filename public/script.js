@@ -1,144 +1,129 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Zuno</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+let socket = null;
+let localStream = null;
 
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#000,#0f2027,#203a43);
-  color:white;
-  text-align:center;
-}
+let coins = parseInt(localStorage.getItem("coins")) || 0;
+let history = [];
 
 /* LOGIN */
-#loginPage{
-  margin-top:120px;
+function login(){
+  let age = document.getElementById("age").value;
+
+  if(age < 18) return alert("18+ only");
+
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("app").style.display="block";
+
+  socket = io();
+  setupSocket();
+
+  updateCoins();
 }
 
-/* TOP BAR */
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  background:#111;
+/* COINS */
+function updateCoins(){
+  document.getElementById("coins").innerText = coins;
+  localStorage.setItem("coins",coins);
 }
 
-button{
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:cyan;
-  margin:5px;
-  cursor:pointer;
+/* ADS */
+function watchAd(){
+  window.open("https://www.profitableratecpm.com/xxxxx","_blank");
+
+  setTimeout(()=>{
+    coins += 20;
+    updateCoins();
+  },5000);
 }
 
-.coinBox{
-  background:gold;
-  color:black;
-  padding:5px 15px;
-  border-radius:20px;
+/* PREMIUM */
+function openPremium(){
+  document.getElementById("premiumBox").style.display="block";
+}
+function closePremium(){
+  document.getElementById("premiumBox").style.display="none";
+}
+function buy(cost){
+  if(coins < cost) return alert("Not enough coins");
+
+  coins -= cost;
+  updateCoins();
 }
 
-/* VIDEO */
-#videoBox{
-  display:flex;
-  justify-content:center;
-  gap:15px;
-  margin-top:10px;
+/* REPORT */
+function openReport(){
+  document.getElementById("reportBox").style.display="block";
+}
+function closeReport(){
+  document.getElementById("reportBox").style.display="none";
+}
+function reportSend(r){
+  alert("Reported: "+r);
 }
 
-video{
-  width:420px;
-  height:280px;
-  background:black;
-  border-radius:10px;
+/* HISTORY */
+function showHistory(){
+  alert(history.join("\n") || "No history");
 }
 
-/* POPUPS */
-.popup{
-  display:none;
-  position:fixed;
-  top:30%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#111;
-  padding:20px;
-  border-radius:10px;
+/* CHAT */
+async function startChat(){
+  if(coins < 2) return alert("Need coins");
+
+  coins -= 2;
+  updateCoins();
+
+  document.getElementById("loading").style.display="block";
+
+  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  document.getElementById("localVideo").srcObject = localStream;
+
+  socket.emit("start");
 }
 
-</style>
-</head>
+function endChat(){
+  document.getElementById("loading").style.display="none";
 
-<body>
+  if(socket) socket.disconnect();
+}
 
-<!-- LOGIN -->
-<div id="loginPage">
-<h1>ZUNO</h1>
-<input id="name" placeholder="Name"><br>
-<input id="age" type="number" placeholder="Age"><br>
-<button onclick="login()">Enter</button>
-</div>
+/* SOCKET */
+function setupSocket(){
 
-<!-- APP -->
-<div id="app" style="display:none;">
+  socket.on("matched",()=>{
+    document.getElementById("loading").style.display="none";
+  });
 
-<div class="topbar">
+  socket.on("typing",()=>{
+    document.getElementById("typing").innerText="Typing...";
+    setTimeout(()=>document.getElementById("typing").innerText="",2000);
+  });
 
-<div>
-<button onclick="watchAd()">🎬 Ads</button>
-<button onclick="openPremium()">💎 Premium</button>
-</div>
+  socket.on("message",(d)=>{
+    addMessage(d.name+": "+d.text);
+  });
+}
 
-<div class="coinBox">🪙 <span id="coins">0</span></div>
+/* MESSAGE */
+function sendMsg(){
+  let input = document.getElementById("msg");
+  let msg = input.value.trim();
 
-<div>
-<button onclick="showHistory()">🕘 History</button>
-<button onclick="openReport()">🚨 Report</button>
-</div>
+  if(!msg) return;
 
-</div>
+  socket.emit("message",msg);
+  addMessage("You: "+msg);
 
-<div id="loading">🔄 Finding your mate...</div>
+  input.value="";
+}
 
-<div id="videoBox">
-<video id="localVideo" autoplay muted></video>
-<video id="remoteVideo" autoplay></video>
-</div>
+function addMessage(text){
+  let div=document.createElement("div");
+  div.innerText=text;
+  document.getElementById("chatBox").appendChild(div);
 
-<button onclick="startChat()">Start</button>
-<button onclick="nextUser()">Next</button>
-<button onclick="endChat()">End</button>
+  history.push(text);
+}
 
-<input id="msg" oninput="typing()">
-<button onclick="sendMsg()">Send</button>
-
-<div id="typing"></div>
-<div id="chatBox"></div>
-
-</div>
-
-<!-- PREMIUM -->
-<div id="premiumBox" class="popup">
-<h3>Premium Plans</h3>
-<button onclick="buy(200)">Platinum (2h)</button><br>
-<button onclick="buy(500)">Gold (10h)</button><br>
-<button onclick="buy(1000)">Diamond (24h)</button><br>
-<button onclick="closePremium()">Close</button>
-</div>
-
-<!-- REPORT -->
-<div id="reportBox" class="popup">
-<h3>Report Reason</h3>
-<button onclick="reportSend('Nude')">Nude</button>
-<button onclick="reportSend('Violence')">Violence</button>
-<button onclick="reportSend('Abuse')">Abuse</button>
-<button onclick="closeReport()">Close</button>
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
-</body>
-</html>
+/* EXTRA */
+function typing(){ if(socket) socket.emit("typing"); }
+function nextUser(){ if(socket) socket.emit("next"); }
