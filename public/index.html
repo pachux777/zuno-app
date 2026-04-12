@@ -53,6 +53,20 @@ input{
   font-weight:bold;
 }
 
+/* 💎 PREMIUM BADGE */
+.premiumBadge{
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:gold;
+  color:black;
+  padding:5px 12px;
+  border-radius:15px;
+  font-size:14px;
+  display:none;
+}
+
 /* MAIN */
 #app{
   display:none;
@@ -84,16 +98,22 @@ input{
   border-radius:20px;
   overflow:hidden;
   box-shadow:0 0 15px rgba(0,255,255,0.2);
-  position:relative; /* 🔥 needed for overlay */
+  position:relative;
 }
 
 .videoBox video{
   width:100%;
   height:100%;
   object-fit:cover;
+  transition:0.3s;
 }
 
-/* 🔥 INSIDE CAMERA BUTTONS */
+/* 🔥 BLUR EFFECT */
+.blur{
+  filter:blur(8px);
+}
+
+/* 🔥 CAMERA BUTTONS */
 .camOverlay{
   position:absolute;
   bottom:10px;
@@ -109,6 +129,11 @@ input{
   padding:10px;
   cursor:pointer;
   font-size:18px;
+}
+
+/* 🔴 MIC OFF */
+.off{
+  background:red !important;
 }
 
 /* CHAT SIDE */
@@ -129,7 +154,6 @@ input{
   padding:10px;
 }
 
-/* BUTTON */
 button{
   padding:10px 15px;
   border:none;
@@ -138,15 +162,10 @@ button{
   cursor:pointer;
 }
 
-button:hover{
-  opacity:0.8;
-}
-
 .controls{
   text-align:center;
 }
 
-/* MODAL */
 .modal{
   display:none;
   position:fixed;
@@ -166,53 +185,27 @@ button:hover{
   color:red;
   font-weight:bold;
 }
-
-/* MOBILE */
-@media(max-width:768px){
-  #main{
-    flex-direction:column;
-  }
-  #videoSide, #chatSide{
-    width:100%;
-  }
-
-  .videoBox{
-    width:80vw;
-    height:80vw;
-  }
-}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
 <div id="login">
 <h1>⚡ ZUNO ⚡</h1>
-<input id="name" placeholder="Name"><br>
-<input id="age" type="number" placeholder="Age"><br>
-<button onclick="login()">Enter</button><br>
-<button onclick="openTerms()">Terms & Policy</button>
+<input id="name"><br>
+<input id="age" type="number"><br>
+<button onclick="login()">Enter</button>
 </div>
 
-<!-- TERMS -->
-<div id="terms" class="modal">
-<span class="closeBtn" onclick="closeTerms()">✖</span>
-<h3>Terms & Policy</h3>
-<p>18+ only. No abuse. No nudity. Respect others.</p>
-</div>
-
-<!-- MAIN -->
 <div id="app">
 
+<!-- 💎 BADGE -->
+<div class="premiumBadge" id="premiumBadge">💎 PREMIUM</div>
+
 <div class="top">
-<div class="left">
 <button onclick="watchAd()">Ads</button>
-</div>
-
 <div class="coin">🪙 <span id="coins">0</span></div>
-
-<div class="right">
+<div>
 <button onclick="openPremium()">Premium</button>
 <button onclick="openReport()">Report</button>
 <button onclick="loadHistory()">History</button>
@@ -221,17 +214,14 @@ button:hover{
 
 <div id="main">
 
-<!-- VIDEO -->
 <div id="videoSide">
 
-<!-- YOUR CAMERA -->
 <div class="videoBox">
 <video id="me" autoplay muted></video>
 
-<!-- 🔥 CAMERA BUTTONS INSIDE -->
 <div class="camOverlay">
-<div class="camBtn" onclick="toggleCam()">🎥</div>
-<div class="camBtn" onclick="toggleMic()">🎤</div>
+<div id="camBtn" class="camBtn" onclick="toggleCam()">🎥</div>
+<div id="micBtn" class="camBtn" onclick="toggleMic()">🎤</div>
 </div>
 
 </div>
@@ -240,7 +230,6 @@ button:hover{
 <video id="stranger" autoplay></video>
 </div>
 
-<!-- CONTROLS -->
 <div class="controls">
 <button onclick="start()">Start</button>
 <button onclick="next()">Next (-2)</button>
@@ -258,7 +247,6 @@ button:hover{
 
 </div>
 
-<!-- CHAT -->
 <div id="chatSide">
 <div id="chat"></div>
 
@@ -282,38 +270,57 @@ let isPremium = false;
 async function start(){
   stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
   me.srcObject = stream;
-  socket.emit("start");
 }
 
-/* END FIX */
+/* END */
 function end(){
   if(stream){
-    stream.getTracks().forEach(track=>track.stop());
+    stream.getTracks().forEach(t=>t.stop());
     me.srcObject=null;
     stream=null;
   }
-  socket.emit("end");
 }
 
-/* SAFE TOGGLE */
+/* CAMERA TOGGLE */
 function toggleCam(){
   if(!stream) return;
   let t = stream.getVideoTracks()[0];
   t.enabled = !t.enabled;
+
+  if(!t.enabled){
+    me.classList.add("blur");
+  }else{
+    me.classList.remove("blur");
+  }
 }
 
+/* MIC TOGGLE */
 function toggleMic(){
   if(!stream) return;
   let t = stream.getAudioTracks()[0];
   t.enabled = !t.enabled;
+
+  let btn = document.getElementById("micBtn");
+  if(!t.enabled){
+    btn.classList.add("off");
+  }else{
+    btn.classList.remove("off");
+  }
 }
 
-/* PREMIUM LOCK */
+/* PREMIUM */
 function checkPremium(select){
   if(!isPremium && select.value !== "all"){
     alert("Premium required");
     select.value="all";
   }
+}
+
+/* DEMO PREMIUM */
+function openPremium(){
+  isPremium=true;
+  document.getElementById("premiumBadge").style.display="block";
+  alert("Premium Activated");
 }
 </script>
 
