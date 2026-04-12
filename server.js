@@ -53,14 +53,6 @@ io.on("connection",(socket)=>{
     match(socket);
   });
 
-  socket.on("disconnect",()=>{
-    if(socket.partner){
-      socket.partner.emit("partner-disconnected");
-      socket.partner.partner=null;
-    }
-    waitingUsers = waitingUsers.filter(u=>u!==socket);
-  });
-
 });
 
 const PORT = process.env.PORT || 10000;
