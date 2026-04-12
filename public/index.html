@@ -2,124 +2,118 @@
 <html>
 <head>
 <title>Zuno</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
   margin:0;
-  font-family:Arial;
-  color:white;
-  text-align:center;
   background:linear-gradient(135deg,#000,#0f2027,#203a43);
+  color:white;
+  font-family:Arial;
+  text-align:center;
 }
 
-/* LOGIN */
-#loginPage{
-  margin-top:120px;
-}
-
-input{
-  padding:10px;
-  margin:10px;
-  border-radius:10px;
-  border:none;
-  width:200px;
-}
-
-button{
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:cyan;
-  margin:5px;
-  cursor:pointer;
-}
-
-/* TOPBAR */
-.topbar{
+/* TOP BAR */
+.top{
   display:flex;
   justify-content:space-between;
   padding:10px;
   background:#111;
 }
 
+.left button, .right button{
+  margin:3px;
+}
+
 .coin{
   background:gold;
   color:black;
-  padding:5px 15px;
+  padding:6px 15px;
   border-radius:20px;
 }
 
 /* VIDEO */
-#videoBox{
+#videos{
   display:flex;
   justify-content:center;
   gap:15px;
+  margin-top:10px;
 }
 
 video{
-  width:420px;
-  height:280px;
+  width:440px;
+  height:300px;
   border-radius:10px;
   background:black;
 }
 
-/* LOADING */
-#loading{
-  display:none;
-  font-size:18px;
-  margin:10px;
+/* BUTTON */
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:cyan;
+  cursor:pointer;
 }
 
-/* MOBILE */
-@media(max-width:768px){
-  video{width:48%;height:300px;}
+#loading{
+  display:none;
 }
+
+/* PREMIUM POPUP */
+#premiumBox{
+  display:none;
+  position:fixed;
+  top:30%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#111;
+  padding:20px;
+  border-radius:15px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div id="loginPage">
-<h1>⚡ ZUNO ⚡</h1>
-<input id="name" placeholder="Name"><br>
-<input id="age" type="number" placeholder="Age"><br>
-<button onclick="login()">Enter</button>
-</div>
-
-<div id="app" style="display:none;">
-
-<div class="topbar">
-<div>
+<div class="top">
+<div class="left">
 <button onclick="watchAd()">🎬 Ads</button>
 <button onclick="openPremium()">💎</button>
 </div>
 
 <div class="coin">🪙 <span id="coins">0</span></div>
 
-<div>
-<button onclick="showHistory()">🕘</button>
-<button onclick="reportUser()">🚨</button>
+<div class="right">
+<button onclick="historyShow()">🕘</button>
+<button onclick="report()">🚨</button>
 </div>
 </div>
 
 <div id="loading">🔄 Finding your mate...</div>
 
-<div id="videoBox">
-<video id="localVideo" autoplay muted></video>
-<video id="remoteVideo" autoplay></video>
+<div id="videos">
+<video id="me" autoplay muted></video>
+<video id="stranger" autoplay></video>
 </div>
 
-<button onclick="startChat()">Start</button>
-<button onclick="nextUser()">Next</button>
-<button onclick="endChat()">End</button>
+<button onclick="start()">Start</button>
+<button onclick="next()">Next</button>
+<button onclick="end()">End</button>
 
-<input id="msg" oninput="typing()">
-<button onclick="sendMsg()">Send</button>
+<input id="msg">
+<button onclick="send()">Send</button>
 
-<div id="typing"></div>
-<div id="chatBox"></div>
+<div id="chat"></div>
 
+<!-- PREMIUM -->
+<div id="premiumBox">
+<h3>💎 Premium</h3>
+<button onclick="buy(200,7200)">Platinum (2h)</button><br>
+<button onclick="buy(500,36000)">Gold (10h)</button><br>
+<button onclick="buy(1000,86400)">Diamond (24h)</button><br>
+<button onclick="closePremium()">Close</button>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
