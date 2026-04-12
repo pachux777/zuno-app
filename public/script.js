@@ -1,59 +1,69 @@
 let socket, peer, stream;
 
-let coins = +localStorage.getItem("coins") || 100;
-let history = [];
+let coins = +localStorage.getItem("coins") || 0;
 
-const AD_LINK = "https://www.profitableratecpm.com/xxxxx"; // your link
+/* LOGIN */
+function login(){
+  let age = document.getElementById("age").value;
+  if(age < 18) return alert("18+ only");
 
-update();
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
 
-/* UI */
-function update(){
-  coinsEl.innerText = coins;
+  updateCoins();
+}
+
+/* COINS */
+function updateCoins(){
+  document.getElementById("coins").innerText = coins;
   localStorage.setItem("coins",coins);
 }
 
-/* ===== REALISTIC ADS SYSTEM ===== */
+/* ADS */
+function watchAd(){
+  window.open("https://www.profitableratecpm.com/xxxxx","_blank");
 
-let timerInterval;
-
-function openAd(){
-  window.open(AD_LINK,"_blank");
-
-  adBox.style.display="block";
-  let time = 8;
-  timer.innerText = time;
-  claimBtn.disabled = true;
-
-  timerInterval = setInterval(()=>{
-    time--;
-    timer.innerText = time;
-
-    if(time <= 0){
-      clearInterval(timerInterval);
-      claimBtn.disabled = false;
-    }
-  },1000);
+  setTimeout(()=>{
+    coins += 20;
+    updateCoins();
+    alert("+20 coins");
+  },5000);
 }
 
-function claimReward(){
-  coins += 20;
-  update();
-
-  adBox.style.display="none";
+/* PREMIUM */
+function openPremium(){
+  document.getElementById("premium").style.display="block";
+}
+function closePremium(){
+  document.getElementById("premium").style.display="none";
+}
+function buy(cost){
+  if(coins < cost) return alert("Not enough coins");
+  coins -= cost;
+  updateCoins();
+  alert("Premium activated");
 }
 
-/* =============================== */
+/* REPORT */
+function openReport(){
+  document.getElementById("report").style.display="block";
+}
+function closeReport(){
+  document.getElementById("report").style.display="none";
+}
+function submitReport(reason){
+  alert("Reported: "+reason);
+}
 
 /* CHAT */
 async function start(){
   if(coins < 2) return alert("Need coins");
 
   coins -= 2;
-  update();
+  updateCoins();
 
   stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  me.srcObject = stream;
+  document.getElementById("me").srcObject = stream;
 
   socket = io();
   setup();
@@ -66,17 +76,24 @@ function end(){
   if(socket) socket.disconnect();
 }
 
+function next(){
+  if(peer) peer.close();
+  socket.emit("next");
+}
+
 /* SOCKET */
 function setup(){
 
-  socket.on("matched",()=>peerCreate());
+  socket.on("matched",()=>{
+    createPeer();
+  });
 
   socket.on("message",(d)=>{
-    chat.innerHTML += "<div>"+d.name+": "+d.text+"</div>";
+    addMsg(d.name+": "+d.text);
   });
 
   socket.on("signal",async(d)=>{
-    if(!peer) peerCreate();
+    if(!peer) createPeer();
 
     if(d.sdp){
       await peer.setRemoteDescription(d.sdp);
@@ -95,14 +112,16 @@ function setup(){
 }
 
 /* WEBRTC */
-function peerCreate(){
+function createPeer(){
   peer = new RTCPeerConnection({
     iceServers:[{urls:"stun:stun.l.google.com:19302"}]
   });
 
   stream.getTracks().forEach(t=>peer.addTrack(t,stream));
 
-  peer.ontrack=e=>stranger.srcObject=e.streams[0];
+  peer.ontrack=e=>{
+    document.getElementById("stranger").srcObject=e.streams[0];
+  };
 
   peer.onicecandidate=e=>{
     if(e.candidate){
@@ -116,18 +135,26 @@ function peerCreate(){
   });
 }
 
-/* SEND */
+/* MESSAGE */
 function send(){
-  let m = msg.value.trim();
+  let input = document.getElementById("msg");
+  let m = input.value.trim();
+
   if(!m) return;
 
   socket.emit("message",m);
-  chat.innerHTML += "<div>You: "+m+"</div>";
-  msg.value="";
+  addMsg("You: "+m);
+
+  input.value="";
 }
 
-/* EXTRA */
-function next(){ if(peer) peer.close(); socket.emit("next"); }
-function showHistory(){ alert(chat.innerText); }
-function report(){ alert("Reported"); }
-function openPremium(){ alert("Premium coming soon"); }
+function addMsg(text){
+  let d=document.createElement("div");
+  d.innerText=text;
+  document.getElementById("chat").appendChild(d);
+}
+
+/* HISTORY */
+function openHistory(){
+  alert(document.getElementById("chat").innerText || "No history");
+}
