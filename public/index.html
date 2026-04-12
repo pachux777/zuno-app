@@ -7,16 +7,26 @@
 <style>
 body{
   margin:0;
-  background:linear-gradient(135deg,#000,#0f2027,#203a43);
-  color:white;
   font-family:Arial;
-  text-align:center;
+  background:#0f2027;
+  color:white;
 }
 
-/* TITLE */
-h1{ font-size:36px; }
+/* LOGIN */
+#login{
+  text-align:center;
+  margin-top:100px;
+}
 
-/* TOP */
+input{
+  padding:12px;
+  width:260px;
+  margin:5px;
+  border-radius:10px;
+  border:none;
+}
+
+/* TOP BAR */
 .top{
   display:flex;
   justify-content:space-between;
@@ -26,26 +36,46 @@ h1{ font-size:36px; }
 
 .coin{
   background:gold;
-  color:black;
   padding:5px 15px;
   border-radius:20px;
+  color:black;
+}
+
+/* MAIN */
+#main{
+  display:flex;
+  height:80vh;
 }
 
 /* VIDEO */
-#videos{
+#videoSide{
+  width:60%;
   display:flex;
+  flex-direction:column;
   gap:10px;
-  justify-content:center;
 }
 
 video{
-  width:45%;
-  height:260px;
+  width:100%;
+  height:45%;
   background:black;
   border-radius:10px;
 }
 
-/* BUTTON */
+/* CHAT */
+#chatSide{
+  width:40%;
+  display:flex;
+  flex-direction:column;
+}
+
+#chat{
+  flex:1;
+  overflow:auto;
+  background:#111;
+  padding:10px;
+}
+
 button{
   padding:10px;
   border:none;
@@ -54,55 +84,56 @@ button{
   margin:5px;
   cursor:pointer;
 }
-
-/* BOX */
-.box{
-  background:#111;
-  margin:10px;
-  padding:10px;
-  border-radius:10px;
-}
-
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
+<div id="login">
 <h1>⚡ ZUNO ⚡</h1>
-
-<div class="box">
-🔞 18+ only | No abuse | No nudity | Respect others
+<input id="name" placeholder="Name"><br>
+<input id="age" type="number" placeholder="Age"><br>
+<button onclick="login()">Enter</button>
 </div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
 
 <div class="top">
 <button onclick="watchAd()">Ads</button>
 <div class="coin">🪙 <span id="coins">0</span></div>
-<button onclick="report()">Report</button>
+<button onclick="openReport()">Report</button>
 </div>
 
-<div class="box">
-<select id="camera"></select>
-<select id="mic"></select>
-</div>
+<div id="main">
 
-<div id="loading" style="display:none;">🔄 Finding your mate...</div>
-
-<div id="videos">
+<div id="videoSide">
 <video id="me" autoplay muted></video>
 <video id="stranger" autoplay></video>
-</div>
 
 <button onclick="start()">Start</button>
-<button onclick="next()">Next</button>
+<button onclick="next()">Next (-2)</button>
 <button onclick="end()">End</button>
+</div>
 
-<br>
+<div id="chatSide">
+<div id="chat"></div>
 
 <input id="msg">
 <button onclick="send()">Send</button>
+</div>
 
-<div id="typing"></div>
-<div id="chat"></div>
+</div>
+
+</div>
+
+<!-- REPORT -->
+<div id="reportBox" style="display:none; position:fixed; top:30%; left:40%; background:#111; padding:20px;">
+<button onclick="reportAction('Nude')">Nude</button>
+<button onclick="reportAction('Abuse')">Abuse</button>
+<button onclick="reportAction('Violence')">Violence</button>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
