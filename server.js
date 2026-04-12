@@ -10,12 +10,11 @@ app.use(express.static("public"));
 
 let waitingUsers = [];
 
-function findMatch(socket) {
-  for (let i = 0; i < waitingUsers.length; i++) {
+function match(socket){
+  for(let i=0;i<waitingUsers.length;i++){
     let user = waitingUsers[i];
-
-    if (user !== socket) {
-      waitingUsers.splice(i, 1);
+    if(user !== socket){
+      waitingUsers.splice(i,1);
 
       socket.partner = user;
       user.partner = socket;
@@ -28,51 +27,41 @@ function findMatch(socket) {
   waitingUsers.push(socket);
 }
 
-io.on("connection", (socket) => {
+io.on("connection",(socket)=>{
 
-  socket.on("set-name", (name) => {
-    socket.name = name;
-  });
+  socket.on("set-name",(name)=> socket.name = name);
 
-  socket.on("start", () => {
-    findMatch(socket);
-  });
+  socket.on("start",()=> match(socket));
 
-  socket.on("signal", (data) => {
-    if (socket.partner) {
-      socket.partner.emit("signal", data);
+  socket.on("signal",(data)=>{
+    if(socket.partner){
+      socket.partner.emit("signal",data);
     }
   });
 
-  socket.on("message", (msg) => {
-    if (socket.partner) {
-      socket.partner.emit("message", {
-        name: socket.name || "Stranger",
-        text: msg
-      });
+  socket.on("message",(msg)=>{
+    if(socket.partner){
+      socket.partner.emit("message",{name:socket.name,text:msg});
     }
   });
 
-  socket.on("next", () => {
-    if (socket.partner) {
+  socket.on("next",()=>{
+    if(socket.partner){
       socket.partner.emit("partner-disconnected");
-      socket.partner.partner = null;
+      socket.partner.partner=null;
     }
-
-    socket.partner = null;
-    findMatch(socket);
+    socket.partner=null;
+    match(socket);
   });
 
-  socket.on("disconnect", () => {
-    if (socket.partner) {
+  socket.on("disconnect",()=>{
+    if(socket.partner){
       socket.partner.emit("partner-disconnected");
-      socket.partner.partner = null;
+      socket.partner.partner=null;
     }
-
-    waitingUsers = waitingUsers.filter(u => u !== socket);
+    waitingUsers = waitingUsers.filter(u=>u!==socket);
   });
 
 });
 
-const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => console.log("Server running on port", PORT));
+server.listen(10000,()=>console.log("Server running"));
