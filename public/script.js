@@ -1,160 +1,144 @@
-let socket, peer, stream;
+<!DOCTYPE html>
+<html>
+<head>
+<title>Zuno</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-let coins = +localStorage.getItem("coins") || 0;
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(135deg,#000,#0f2027,#203a43);
+  color:white;
+  text-align:center;
+}
 
 /* LOGIN */
-function login(){
-  let age = document.getElementById("age").value;
-  if(age < 18) return alert("18+ only");
-
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").style.display="block";
-
-  updateCoins();
+#loginPage{
+  margin-top:120px;
 }
 
-/* COINS */
-function updateCoins(){
-  document.getElementById("coins").innerText = coins;
-  localStorage.setItem("coins",coins);
+/* TOP BAR */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  background:#111;
 }
 
-/* ADS */
-function watchAd(){
-  window.open("https://www.profitableratecpm.com/xxxxx","_blank");
-
-  setTimeout(()=>{
-    coins += 20;
-    updateCoins();
-    alert("+20 coins");
-  },5000);
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:cyan;
+  margin:5px;
+  cursor:pointer;
 }
 
-/* PREMIUM */
-function openPremium(){
-  document.getElementById("premium").style.display="block";
-}
-function closePremium(){
-  document.getElementById("premium").style.display="none";
-}
-function buy(cost){
-  if(coins < cost) return alert("Not enough coins");
-  coins -= cost;
-  updateCoins();
-  alert("Premium activated");
+.coinBox{
+  background:gold;
+  color:black;
+  padding:5px 15px;
+  border-radius:20px;
 }
 
-/* REPORT */
-function openReport(){
-  document.getElementById("report").style.display="block";
-}
-function closeReport(){
-  document.getElementById("report").style.display="none";
-}
-function submitReport(reason){
-  alert("Reported: "+reason);
+/* VIDEO */
+#videoBox{
+  display:flex;
+  justify-content:center;
+  gap:15px;
+  margin-top:10px;
 }
 
-/* CHAT */
-async function start(){
-  if(coins < 2) return alert("Need coins");
-
-  coins -= 2;
-  updateCoins();
-
-  stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  document.getElementById("me").srcObject = stream;
-
-  socket = io();
-  setup();
-
-  socket.emit("start");
+video{
+  width:420px;
+  height:280px;
+  background:black;
+  border-radius:10px;
 }
 
-function end(){
-  if(peer) peer.close();
-  if(socket) socket.disconnect();
+/* POPUPS */
+.popup{
+  display:none;
+  position:fixed;
+  top:30%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#111;
+  padding:20px;
+  border-radius:10px;
 }
 
-function next(){
-  if(peer) peer.close();
-  socket.emit("next");
-}
+</style>
+</head>
 
-/* SOCKET */
-function setup(){
+<body>
 
-  socket.on("matched",()=>{
-    createPeer();
-  });
+<!-- LOGIN -->
+<div id="loginPage">
+<h1>ZUNO</h1>
+<input id="name" placeholder="Name"><br>
+<input id="age" type="number" placeholder="Age"><br>
+<button onclick="login()">Enter</button>
+</div>
 
-  socket.on("message",(d)=>{
-    addMsg(d.name+": "+d.text);
-  });
+<!-- APP -->
+<div id="app" style="display:none;">
 
-  socket.on("signal",async(d)=>{
-    if(!peer) createPeer();
+<div class="topbar">
 
-    if(d.sdp){
-      await peer.setRemoteDescription(d.sdp);
+<div>
+<button onclick="watchAd()">🎬 Ads</button>
+<button onclick="openPremium()">💎 Premium</button>
+</div>
 
-      if(d.sdp.type==="offer"){
-        let a = await peer.createAnswer();
-        await peer.setLocalDescription(a);
-        socket.emit("signal",{sdp:peer.localDescription});
-      }
-    }
+<div class="coinBox">🪙 <span id="coins">0</span></div>
 
-    if(d.candidate){
-      await peer.addIceCandidate(d.candidate);
-    }
-  });
-}
+<div>
+<button onclick="showHistory()">🕘 History</button>
+<button onclick="openReport()">🚨 Report</button>
+</div>
 
-/* WEBRTC */
-function createPeer(){
-  peer = new RTCPeerConnection({
-    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
-  });
+</div>
 
-  stream.getTracks().forEach(t=>peer.addTrack(t,stream));
+<div id="loading">🔄 Finding your mate...</div>
 
-  peer.ontrack=e=>{
-    document.getElementById("stranger").srcObject=e.streams[0];
-  };
+<div id="videoBox">
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+</div>
 
-  peer.onicecandidate=e=>{
-    if(e.candidate){
-      socket.emit("signal",{candidate:e.candidate});
-    }
-  };
+<button onclick="startChat()">Start</button>
+<button onclick="nextUser()">Next</button>
+<button onclick="endChat()">End</button>
 
-  peer.createOffer().then(o=>{
-    peer.setLocalDescription(o);
-    socket.emit("signal",{sdp:o});
-  });
-}
+<input id="msg" oninput="typing()">
+<button onclick="sendMsg()">Send</button>
 
-/* MESSAGE */
-function send(){
-  let input = document.getElementById("msg");
-  let m = input.value.trim();
+<div id="typing"></div>
+<div id="chatBox"></div>
 
-  if(!m) return;
+</div>
 
-  socket.emit("message",m);
-  addMsg("You: "+m);
+<!-- PREMIUM -->
+<div id="premiumBox" class="popup">
+<h3>Premium Plans</h3>
+<button onclick="buy(200)">Platinum (2h)</button><br>
+<button onclick="buy(500)">Gold (10h)</button><br>
+<button onclick="buy(1000)">Diamond (24h)</button><br>
+<button onclick="closePremium()">Close</button>
+</div>
 
-  input.value="";
-}
+<!-- REPORT -->
+<div id="reportBox" class="popup">
+<h3>Report Reason</h3>
+<button onclick="reportSend('Nude')">Nude</button>
+<button onclick="reportSend('Violence')">Violence</button>
+<button onclick="reportSend('Abuse')">Abuse</button>
+<button onclick="closeReport()">Close</button>
+</div>
 
-function addMsg(text){
-  let d=document.createElement("div");
-  d.innerText=text;
-  document.getElementById("chat").appendChild(d);
-}
-
-/* HISTORY */
-function openHistory(){
-  alert(document.getElementById("chat").innerText || "No history");
-}
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
