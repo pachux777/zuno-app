@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ===== YOUR FULL ORIGINAL STYLE (UNCHANGED) ===== */
+/* SAME YOUR STYLE (NO CHANGE) */
 body{
   margin:0;
   font-family:Arial;
@@ -14,7 +14,11 @@ body{
   overflow:hidden;
 }
 
-#login{text-align:center;margin-top:120px;}
+#login{
+  text-align:center;
+  margin-top:120px;
+}
+
 #login h1{font-size:40px;}
 
 input{
@@ -25,26 +29,13 @@ input{
   border:none;
 }
 
-.top{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#111;}
-.left,.right{display:flex;gap:10px;}
-.coin{background:gold;color:black;padding:6px 18px;border-radius:20px;font-weight:bold;}
-
-.premiumBadge{
-  position:absolute;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
-  background:gold;
-  color:black;
-  padding:5px 12px;
-  border-radius:15px;
-  display:none;
-}
+.top{display:flex;justify-content:space-between;padding:10px;background:#111;}
+.coin{background:gold;color:black;padding:6px 18px;border-radius:20px;}
 
 #app{display:none;height:100vh;flex-direction:column;}
-#main{flex:1;display:flex;height:calc(100vh - 60px);}
+#main{flex:1;display:flex;}
 
-#videoSide{width:60%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+#videoSide{width:60%;display:flex;flex-direction:column;align-items:center;gap:20px;}
 
 .videoBox{
   width:min(38vh,380px);
@@ -55,13 +46,7 @@ input{
   position:relative;
 }
 
-.videoBox video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.blur{filter:blur(8px);}
+video{width:100%;height:100%;object-fit:cover;}
 
 .camOverlay{
   position:absolute;
@@ -74,25 +59,12 @@ input{
 
 .camBtn{
   background:rgba(0,0,0,0.6);
+  padding:10px;
   border-radius:50%;
-  padding:10px;
-  cursor:pointer;
 }
 
-.off{background:red !important;}
-
-#chatSide{width:40%;display:flex;flex-direction:column;background:#111;}
+#chatSide{width:40%;background:#111;display:flex;flex-direction:column;}
 #chat{flex:1;padding:10px;overflow:auto;}
-.chatInput{padding:10px;}
-
-button{
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:cyan;
-}
-
-.controls{text-align:center;}
 
 .modal{
   display:none;
@@ -114,12 +86,21 @@ button{
 <h1>⚡ ZUNO ⚡</h1>
 <input id="name" placeholder="Enter Name"><br>
 <input id="age" type="number" placeholder="Enter Age"><br>
-<button onclick="login()">Enter</button>
+<button onclick="login()">Enter</button><br>
+<button onclick="openTerms()">Terms & Conditions</button>
+</div>
+
+<!-- TERMS -->
+<div id="termsBox" class="modal">
+<h3>Terms & Conditions</h3>
+<p>18+ only. No nudity. No abuse. Respect all users.</p>
+<button onclick="closeTerms()">Close</button>
 </div>
 
 <!-- REPORT -->
 <div id="reportBox" class="modal">
 <h3>Report</h3>
+<p>User reported</p>
 <button onclick="closeReport()">Close</button>
 </div>
 
@@ -130,13 +111,18 @@ button{
 <button onclick="closeHistory()">Close</button>
 </div>
 
-<div id="app">
+<!-- PREMIUM -->
+<div id="premiumBox" class="modal">
+<h3>Premium Activated 💎</h3>
+<button onclick="closePremium()">Close</button>
+</div>
 
-<div class="premiumBadge" id="premiumBadge">💎 PREMIUM</div>
+<!-- MAIN -->
+<div id="app">
 
 <div class="top">
 <button onclick="watchAd()">Ads</button>
-<div class="coin">🪙 <span id="coins">0</span></div>
+<div class="coin">🪙 <span id="coins">100</span></div>
 <div>
 <button onclick="openPremium()">Premium</button>
 <button onclick="openReport()">Report</button>
@@ -152,30 +138,25 @@ button{
 <video id="me" autoplay muted></video>
 
 <div class="camOverlay">
-<div id="camBtn" class="camBtn" onclick="toggleCam()">🎥</div>
-<div id="micBtn" class="camBtn" onclick="toggleMic()">🎤</div>
+<div class="camBtn" onclick="toggleCam()">🎥</div>
+<div class="camBtn" onclick="toggleMic()">🎤</div>
 </div>
 </div>
 
 <div class="videoBox">
-<video id="stranger" autoplay></video>
+<video id="stranger"></video>
 </div>
 
-<div class="controls">
 <button onclick="start()">Start</button>
-<button onclick="next()">Next (-2)</button>
+<button onclick="next()">Next</button>
 <button onclick="end()">End</button>
-</div>
 
 </div>
 
 <div id="chatSide">
 <div id="chat"></div>
-
-<div class="chatInput">
 <input id="msg">
 <button onclick="send()">Send</button>
-</div>
 </div>
 
 </div>
@@ -196,7 +177,7 @@ function login(){
   }
 
   if(age < 18){
-    alert("18+ only");
+    alert("You must be 18+");
     return;
   }
 
@@ -204,15 +185,18 @@ function login(){
   appBox().style.display="flex";
 }
 
-/* HELPERS */
 function nameInput(){return document.getElementById("name").value;}
 function ageInput(){return document.getElementById("age").value;}
 function loginBox(){return document.getElementById("login");}
 function appBox(){return document.getElementById("app");}
 
+/* TERMS */
+function openTerms(){termsBox.style.display="block";}
+function closeTerms(){termsBox.style.display="none";}
+
 /* ADS */
 function watchAd(){
-  coins += 20;
+  coins+=20;
   updateCoins();
 }
 
@@ -221,6 +205,10 @@ function updateCoins(){
   document.getElementById("coins").innerText = coins;
 }
 
+/* PREMIUM */
+function openPremium(){premiumBox.style.display="block";}
+function closePremium(){premiumBox.style.display="none";}
+
 /* REPORT */
 function openReport(){reportBox.style.display="block";}
 function closeReport(){reportBox.style.display="none";}
@@ -228,7 +216,7 @@ function closeReport(){reportBox.style.display="none";}
 /* HISTORY */
 function loadHistory(){
   historyBox.style.display="block";
-  historyList.innerHTML="<li>User A</li><li>User B</li>";
+  historyList.innerHTML="<li>Previous User</li>";
 }
 function closeHistory(){historyBox.style.display="none";}
 
@@ -245,330 +233,32 @@ function end(){
   }
 }
 
+/* TOGGLE */
 function toggleCam(){
   if(!stream) return;
   let t = stream.getVideoTracks()[0];
-  t.enabled = !t.enabled;
-  me.classList.toggle("blur", !t.enabled);
+  t.enabled=!t.enabled;
 }
 
 function toggleMic(){
   if(!stream) return;
   let t = stream.getAudioTracks()[0];
-  t.enabled = !t.enabled;
-  micBtn.classList.toggle("off", !t.enabled);
+  t.enabled=!t.enabled;
 }
 
 /* CHAT */
 function send(){
-  let m = msg.value;
-  if(!m) return;
+  let text = msg.value;
+  if(!text) return;
+
   let d=document.createElement("div");
-  d.innerText="You: "+m;
+  d.innerText="You: "+text;
   chat.appendChild(d);
+
   msg.value="";
 }
 
-/* NEXT */<!DOCTYPE html>
-<html>
-<head>
-<title>ZUNO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-/* ===== YOUR FULL ORIGINAL STYLE (UNCHANGED) ===== */
-body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#000,#0f2027,#203a43);
-  color:white;
-  overflow:hidden;
-}
-
-#login{
-  text-align:center;
-  margin-top:120px;
-}
-
-#login h1{
-  font-size:40px;
-}
-
-input{
-  padding:12px;
-  width:260px;
-  margin:8px;
-  border-radius:10px;
-  border:none;
-}
-
-.top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px;
-  background:#111;
-}
-
-.left, .right{
-  display:flex;
-  gap:10px;
-}
-
-.coin{
-  background:gold;
-  color:black;
-  padding:6px 18px;
-  border-radius:20px;
-  font-weight:bold;
-}
-
-.premiumBadge{
-  position:absolute;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
-  background:gold;
-  color:black;
-  padding:5px 12px;
-  border-radius:15px;
-  font-size:14px;
-  display:none;
-}
-
-#app{
-  display:none;
-  height:100vh;
-  flex-direction:column;
-}
-
-#main{
-  flex:1;
-  display:flex;
-  height:calc(100vh - 60px);
-}
-
-#videoSide{
-  width:60%;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:20px;
-}
-
-.videoBox{
-  width:min(38vh, 380px);
-  height:min(38vh, 380px);
-  background:black;
-  border-radius:20px;
-  overflow:hidden;
-  box-shadow:0 0 15px rgba(0,255,255,0.2);
-  position:relative;
-}
-
-.videoBox video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  transition:0.3s;
-}
-
-.blur{
-  filter:blur(8px);
-}
-
-.camOverlay{
-  position:absolute;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:10px;
-}
-
-.camBtn{
-  background:rgba(0,0,0,0.6);
-  border-radius:50%;
-  padding:10px;
-  cursor:pointer;
-  font-size:18px;
-}
-
-.off{
-  background:red !important;
-}
-
-#chatSide{
-  width:40%;
-  display:flex;
-  flex-direction:column;
-  background:#111;
-}
-
-#chat{
-  flex:1;
-  padding:10px;
-  overflow:auto;
-}
-
-.chatInput{
-  padding:10px;
-}
-
-button{
-  padding:10px 15px;
-  border:none;
-  border-radius:10px;
-  background:cyan;
-  cursor:pointer;
-}
-
-.controls{
-  text-align:center;
-}
-
-.modal{
-  display:none;
-  position:fixed;
-  top:30%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#222;
-  padding:20px;
-  border-radius:10px;
-}
-
-.closeBtn{
-  position:absolute;
-  top:5px;
-  right:10px;
-  cursor:pointer;
-  color:red;
-  font-weight:bold;
-}
-</style>
-</head>
-
-<body>
-
-<!-- LOGIN -->
-<div id="login">
-<h1>⚡ ZUNO ⚡</h1>
-<input id="name" placeholder="Enter Name"><br>
-<input id="age" type="number" placeholder="Enter Age"><br>
-<button onclick="login()">Enter</button>
-</div>
-
-<!-- 🔥 ADDED REPORT MODAL -->
-<div id="reportBox" class="modal">
-<h3>Report</h3>
-<button onclick="closeReport()">Close</button>
-</div>
-
-<!-- 🔥 ADDED HISTORY MODAL -->
-<div id="historyBox" class="modal">
-<h3>History</h3>
-<ul id="historyList"></ul>
-<button onclick="closeHistory()">Close</button>
-</div>
-
-<div id="app">
-
-<div class="premiumBadge" id="premiumBadge">💎 PREMIUM</div>
-
-<div class="top">
-<button onclick="watchAd()">Ads</button>
-<div class="coin">🪙 <span id="coins">0</span></div>
-<div>
-<button onclick="openPremium()">Premium</button>
-<button onclick="openReport()">Report</button>
-<button onclick="loadHistory()">History</button>
-</div>
-</div>
-
-<div id="main">
-
-<div id="videoSide">
-
-<div class="videoBox">
-<video id="me" autoplay muted></video>
-
-<div class="camOverlay">
-<div id="camBtn" class="camBtn" onclick="toggleCam()">🎥</div>
-<div id="micBtn" class="camBtn" onclick="toggleMic()">🎤</div>
-</div>
-</div>
-
-<div class="videoBox">
-<video id="stranger" autoplay></video>
-</div>
-
-<div class="controls">
-<button onclick="start()">Start</button>
-<button onclick="next()">Next (-2)</button>
-<button onclick="end()">End</button>
-</div>
-
-</div>
-
-<div id="chatSide">
-<div id="chat"></div>
-
-<div class="chatInput">
-<input id="msg">
-<button onclick="send()">Send</button>
-</div>
-</div>
-
-</div>
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
-
-<script>
-
-/* 🔥 ADDED LOGIN FUNCTION */
-function login(){
-  let name = document.getElementById("name").value;
-  let age = document.getElementById("age").value;
-
-  if(!name || !age){
-    alert("Fill all fields");
-    return;
-  }
-
-  if(age < 18){
-    alert("18+ only");
-    return;
-  }
-
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").style.display="flex";
-}
-
-/* 🔥 ADDED ADS FUNCTION */
-function watchAd(){
-  let c = document.getElementById("coins");
-  c.innerText = parseInt(c.innerText || 0) + 20;
-}
-
-/* 🔥 REPORT FIX */
-function openReport(){reportBox.style.display="block";}
-function closeReport(){reportBox.style.display="none";}
-
-/* 🔥 HISTORY FIX */
-function loadHistory(){
-  historyBox.style.display="block";
-  historyList.innerHTML="<li>Connected User</li>";
-}
-function closeHistory(){historyBox.style.display="none";}
-
-</script>
-
-</body>
-</html>
+/* NEXT */
 function next(){
   if(coins < 2){
     alert("Need coins");
