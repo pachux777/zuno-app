@@ -1,110 +1,164 @@
-﻿const socket = io();
-
-let localStream;
+let socket;
 let peer;
+let localStream;
+let history = [];
 
-// START (camera only once)
-async function startChat() {
-  if (!localStream) {
-    localStream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
-    });
+// LOGIN
+function login() {
+  let name = document.getElementById("username").value;
+  let age = document.getElementById("age").value;
 
-    document.getElementById("me").srcObject = localStream;
+  if (!name || !age) {
+    alert("Fill all fields");
+    return;
   }
 
-  const gender = document.getElementById("gender").value;
-  socket.emit("start", { gender });
+  if (age < 18) {
+    alert("Only 18+ allowed");
+    return;
+  }
+
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  socket = io();
+  socket.emit("set-name", name);
+
+  setupSocket();
 }
 
+// CAMERA
+async function startCamera() {
+  localStream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  });
+
+  document.getElementById("localVideo").srcObject = localStream;
+}
+
+// START CHAT
+function startChat() {
+  startCamera();
+  socket.emit("start");
+  document.getElementById("status").innerText = "Searching...";
+}
+
+// SOCKET
+function setupSocket() {
+
+  socket.on("matched", () => {
+    document.getElementById("status").innerText = "Connected 🔥";
+    createPeer();
+  });
+
+  socket.on("signal", async (data) => {
+    if (!peer) createPeer();
+
+    if (data.sdp) {
+      await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
+      if (data.sdp.type === "offer") {
+        let answer = await peer.createAnswer();
+        await peer.setLocalDescription(answer);
+        socket.emit("signal", { sdp: peer.localDescription });
+      }
+    }
+
+    if (data.candidate) {
+      await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+
+  socket.on("message", (data) => {
+    addMessage(data.name + ": " + data.text);
+  });
+
+  socket.on("partner-disconnected", () => {
+    document.getElementById("status").innerText = "Searching...";
+    if (peer) peer.close();
+    document.getElementById("remoteVideo").srcObject = null;
+  });
+}
+
+// WEBRTC
 function createPeer() {
   peer = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
   });
 
-  localStream.getTracks().forEach(t => peer.addTrack(t, localStream));
+  localStream.getTracks().forEach(track => {
+    peer.addTrack(track, localStream);
+  });
 
-  peer.ontrack = e => {
-    document.getElementById("stranger").srcObject = e.streams[0];
+  peer.ontrack = (event) => {
+    document.getElementById("remoteVideo").srcObject = event.streams[0];
   };
 
-  peer.onicecandidate = e => {
-    if (e.candidate) socket.emit("candidate", e.candidate);
+  peer.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("signal", { candidate: event.candidate });
+    }
   };
+
+  peer.createOffer().then(offer => {
+    peer.setLocalDescription(offer);
+    socket.emit("signal", { sdp: offer });
+  });
 }
 
-socket.on("matched", async () => {
-  createPeer();
+// CHAT
+function sendMsg() {
+  let input = document.getElementById("msgInput");
 
-  const offer = await peer.createOffer();
-  await peer.setLocalDescription(offer);
+  socket.emit("message", input.value);
+  addMessage("You: " + input.value);
 
-  socket.emit("offer", offer);
-});
+  input.value = "";
+}
 
-socket.on("offer", async offer => {
-  createPeer();
+function addMessage(msg) {
+  let div = document.createElement("div");
+  div.innerText = msg;
+  document.getElementById("chatBox").appendChild(div);
+  history.push(msg);
+}
 
-  await peer.setRemoteDescription(offer);
+// HISTORY
+function showHistory() {
+  alert(history.join("\n") || "No history");
+}
 
-  const answer = await peer.createAnswer();
-  await peer.setLocalDescription(answer);
+// EXTRA FEATURES
+function coins() {
+  alert("Coins system coming soon");
+}
 
-  socket.emit("answer", answer);
-});
+function reportUser() {
+  alert("User reported 🚨");
+}
 
-socket.on("answer", async a => await peer.setRemoteDescription(a));
-socket.on("candidate", async c => await peer.addIceCandidate(c));
+function toggleTheatre() {
+  document.getElementById("videoBox").classList.toggle("big");
+}
 
-// 🔥 ONLY DISCONNECT STRANGER
-function resetConnectionOnly() {
+// NEXT / END
+function nextUser() {
+  if (peer) peer.close();
+  socket.emit("next");
+}
+
+function endChat() {
   if (peer) {
     peer.close();
     peer = null;
   }
 
-  document.getElementById("stranger").srcObject = null;
-}
-
-// NEXT (camera stays ON)
-function nextUser() {
-  socket.emit("next");
-
-  resetConnectionOnly();
-
-  const gender = document.getElementById("gender").value;
-  socket.emit("start", { gender });
-}
-
-// END (FULL STOP)
-function endChat() {
-  socket.emit("end");
-
-  if (peer) peer.close();
-  peer = null;
-
-  if (localStream) {
-    localStream.getTracks().forEach(track => track.stop());
-    localStream = null;
+  if (socket) {
+    socket.disconnect();
+    socket = null;
   }
 
-  document.getElementById("me").srcObject = null;
-  document.getElementById("stranger").srcObject = null;
+  document.getElementById("remoteVideo").srcObject = null;
+  document.getElementById("status").innerText = "Ended";
 }
-
-socket.on("next", resetConnectionOnly);
-socket.on("end", resetConnectionOnly);
-
-// CHAT
-function sendMsg() {
-  let msg = document.getElementById("msg").value;
-
-  socket.emit("message", msg);
-
-  document.getElementById("chat").innerHTML += "<p>🧑 " + msg + "</p>";
-}
-
-socket.on("message", msg => {
-  document.getElementById("chat").innerHTML += "<p>👤 " + msg + "</p>";
-});
