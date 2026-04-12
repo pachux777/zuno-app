@@ -1,73 +1,52 @@
 let socket;
 let peer;
 let localStream;
+let history=[];
 
-// ===== AD CONTROL =====
-const AD_URL = "https://pl29131156.profitablecpmratenetwork.com/8d/99/98/8d99989f643f0ceb74dababf43137ed4.js";
-
-let lastAdTime = 0;
-
-function triggerAd(){
-  let now = Date.now();
-
-  if(now - lastAdTime < 30000) return;
-
-  let s = document.createElement("script");
-  s.src = AD_URL;
-  document.body.appendChild(s);
-
-  lastAdTime = now;
-}
-
-// ===== LOGIN =====
+// LOGIN
 function login(){
-  let name = document.getElementById("username").value;
-  let age = document.getElementById("age").value;
+  let name=username.value;
+  let age=document.getElementById("age").value;
 
-  if(!name || !age) return alert("Fill all fields");
-  if(age < 18) return alert("18+ only");
+  if(age<18) return alert("18+ only");
 
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="block";
+  loginPage.style.display="none";
+  app.style.display="block";
 
-  socket = io();
-  socket.emit("set-name", name);
+  socket=io();
+  socket.emit("set-name",name);
 
   setupSocket();
 }
 
-// ===== CAMERA =====
+// CAMERA
 async function startCamera(){
-  localStream = await navigator.mediaDevices.getUserMedia({
-    video:true,
-    audio:true
-  });
-
-  document.getElementById("localVideo").srcObject = localStream;
+  localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  localVideo.srcObject=localStream;
 }
 
-// ===== START =====
+// START
 function startChat(){
   startCamera();
   socket.emit("start");
-  triggerAd();
+  status.innerText="Searching...";
 }
 
-// ===== SOCKET =====
+// SOCKET
 function setupSocket(){
 
-  socket.on("matched", ()=>{
+  socket.on("matched",()=>{
+    status.innerText="Connected";
     createPeer();
   });
 
-  socket.on("signal", async (data)=>{
+  socket.on("signal",async(data)=>{
     if(!peer) createPeer();
 
     if(data.sdp){
       await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
-
       if(data.sdp.type==="offer"){
-        let ans = await peer.createAnswer();
+        let ans=await peer.createAnswer();
         await peer.setLocalDescription(ans);
         socket.emit("signal",{sdp:peer.localDescription});
       }
@@ -79,30 +58,26 @@ function setupSocket(){
   });
 
   socket.on("message",(data)=>{
-    let div = document.createElement("div");
-    div.innerText = data.name + ": " + data.text;
-    document.getElementById("chatBox").appendChild(div);
+    addMessage(data.name+": "+data.text);
   });
 
-  socket.on("partner-disconnected", ()=>{
+  socket.on("partner-disconnected",()=>{
     if(peer) peer.close();
-    document.getElementById("remoteVideo").srcObject = null;
+    remoteVideo.srcObject=null;
   });
 }
 
-// ===== WEBRTC =====
+// WEBRTC
 function createPeer(){
-  peer = new RTCPeerConnection({
+  peer=new RTCPeerConnection({
     iceServers:[{urls:"stun:stun.l.google.com:19302"}]
   });
 
-  localStream.getTracks().forEach(t=>peer.addTrack(t, localStream));
+  localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
 
-  peer.ontrack = e=>{
-    document.getElementById("remoteVideo").srcObject = e.streams[0];
-  };
+  peer.ontrack=e=>remoteVideo.srcObject=e.streams[0];
 
-  peer.onicecandidate = e=>{
+  peer.onicecandidate=e=>{
     if(e.candidate){
       socket.emit("signal",{candidate:e.candidate});
     }
@@ -114,44 +89,57 @@ function createPeer(){
   });
 }
 
-// ===== CHAT =====
+// MESSAGE FIXED
 function sendMsg(){
-  let input = document.getElementById("msgInput");
+  if(!socket) return;
 
-  socket.emit("message", input.value);
+  let msg=msgInput.value;
+  if(!msg) return;
 
-  let div = document.createElement("div");
-  div.innerText = "You: " + input.value;
-  document.getElementById("chatBox").appendChild(div);
+  socket.emit("message",msg);
+  addMessage("You: "+msg);
 
-  input.value="";
+  msgInput.value="";
 }
 
-// ===== NEXT =====
+// ADD MESSAGE
+function addMessage(msg){
+  let d=document.createElement("div");
+  d.innerText=msg;
+  chatBox.appendChild(d);
+  history.push(msg);
+}
+
+// NEXT FIXED
 function nextUser(){
-  if(peer) peer.close();
+  if(peer){
+    peer.close();
+    peer=null;
+  }
   socket.emit("next");
-  triggerAd();
 }
 
-// ===== END (FIXED) =====
+// END FIXED
 function endChat(){
   if(peer){
     peer.close();
-    peer = null;
+    peer=null;
   }
-
   if(socket){
     socket.disconnect();
-    socket = null;
+    socket=null;
   }
-
   if(localStream){
-    localStream.getTracks().forEach(track => track.stop());
+    localStream.getTracks().forEach(t=>t.stop());
   }
 
-  document.getElementById("localVideo").srcObject = null;
-  document.getElementById("remoteVideo").srcObject = null;
+  localVideo.srcObject=null;
+  remoteVideo.srcObject=null;
 
-  alert("Chat Ended");
+  status.innerText="Ended";
 }
+
+// EXTRA
+function coins(){ alert("Coins coming soon 💰"); }
+function reportUser(){ alert("User reported 🚨"); }
+function showHistory(){ alert(history.join("\n")||"No history"); }
