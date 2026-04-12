@@ -9,20 +9,16 @@ body{
   margin:0;
   background:linear-gradient(135deg,#000,#0f2027,#203a43);
   color:white;
-  font-family:Arial;
   text-align:center;
+  font-family:Arial;
 }
 
-/* TOP BAR */
+/* TOP */
 .top{
   display:flex;
   justify-content:space-between;
   padding:10px;
   background:#111;
-}
-
-.left button, .right button{
-  margin:3px;
 }
 
 .coin{
@@ -32,44 +28,36 @@ body{
   border-radius:20px;
 }
 
-/* VIDEO */
-#videos{
-  display:flex;
-  justify-content:center;
-  gap:15px;
-  margin-top:10px;
-}
-
-video{
-  width:440px;
-  height:300px;
-  border-radius:10px;
-  background:black;
-}
-
-/* BUTTON */
 button{
   padding:10px;
   border:none;
   border-radius:10px;
   background:cyan;
+  margin:4px;
   cursor:pointer;
 }
 
-#loading{
-  display:none;
+/* VIDEO */
+#videos{
+  display:flex;
+  justify-content:center;
+  gap:15px;
 }
 
-/* PREMIUM POPUP */
-#premiumBox{
+video{
+  width:420px;
+  height:280px;
+  background:black;
+  border-radius:10px;
+}
+
+/* AD BOX */
+#adBox{
   display:none;
-  position:fixed;
-  top:30%;
-  left:50%;
-  transform:translate(-50%,-50%);
   background:#111;
-  padding:20px;
-  border-radius:15px;
+  padding:15px;
+  margin:10px;
+  border-radius:10px;
 }
 
 </style>
@@ -78,20 +66,25 @@ button{
 <body>
 
 <div class="top">
-<div class="left">
-<button onclick="watchAd()">🎬 Ads</button>
+<div>
+<button onclick="openAd()">🎬 Ads</button>
 <button onclick="openPremium()">💎</button>
 </div>
 
 <div class="coin">🪙 <span id="coins">0</span></div>
 
-<div class="right">
-<button onclick="historyShow()">🕘</button>
+<div>
+<button onclick="showHistory()">🕘</button>
 <button onclick="report()">🚨</button>
 </div>
 </div>
 
-<div id="loading">🔄 Finding your mate...</div>
+<!-- AD WAIT -->
+<div id="adBox">
+<h3>⏳ Watch Ad...</h3>
+<p id="timer">8</p>
+<button id="claimBtn" disabled onclick="claimReward()">Claim +20</button>
+</div>
 
 <div id="videos">
 <video id="me" autoplay muted></video>
@@ -106,15 +99,6 @@ button{
 <button onclick="send()">Send</button>
 
 <div id="chat"></div>
-
-<!-- PREMIUM -->
-<div id="premiumBox">
-<h3>💎 Premium</h3>
-<button onclick="buy(200,7200)">Platinum (2h)</button><br>
-<button onclick="buy(500,36000)">Gold (10h)</button><br>
-<button onclick="buy(1000,86400)">Diamond (24h)</button><br>
-<button onclick="closePremium()">Close</button>
-</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
