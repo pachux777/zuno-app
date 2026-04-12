@@ -1,5 +1,6 @@
 let socket, peer, localStream;
 
+// coins (frontend only ✅ safe)
 let coins = parseInt(localStorage.getItem("coins")) || 0;
 updateCoins();
 
@@ -29,7 +30,7 @@ function watchAd(){
   updateCoins();
 }
 
-// START
+// START CHAT
 async function startChat(){
   document.getElementById("loading").style.display="block";
 
@@ -49,7 +50,7 @@ function setupSocket(){
 
   socket.on("typing",()=>{
     document.getElementById("typing").innerText="Stranger typing...";
-    setTimeout(()=>typing.innerText="",2000);
+    setTimeout(()=>document.getElementById("typing").innerText="",2000);
   });
 
   socket.on("signal",async(data)=>{
@@ -105,22 +106,22 @@ function typing(){
   if(socket) socket.emit("typing");
 }
 
-// SEND MESSAGE
+// SEND MESSAGE (FIXED)
 function sendMsg(){
   if(!socket) return;
 
   let input = document.getElementById("msg");
   let msg = input.value.trim();
 
-  if(msg==="") return;
+  if(msg === "") return;
 
-  socket.emit("message",msg);
+  socket.emit("message", msg);
 
   let div = document.createElement("div");
   div.innerText = "You: " + msg;
   document.getElementById("chatBox").appendChild(div);
 
-  input.value="";
+  input.value = "";
 }
 
 // NEXT
