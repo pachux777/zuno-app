@@ -12,7 +12,7 @@ body{
   color:white;
 }
 
-/* ===== LOGIN ===== */
+/* LOGIN */
 #login{
   text-align:center;
   margin-top:120px;
@@ -30,7 +30,7 @@ input{
   border:none;
 }
 
-/* ===== TOP BAR ===== */
+/* TOP BAR */
 .top{
   display:flex;
   justify-content:space-between;
@@ -52,11 +52,10 @@ input{
   font-weight:bold;
 }
 
-/* ===== MAIN ===== */
+/* MAIN */
 #app{
   display:none;
   height:100vh;
-  display:flex;
   flex-direction:column;
 }
 
@@ -65,7 +64,7 @@ input{
   display:flex;
 }
 
-/* ===== VIDEO SIDE ===== */
+/* VIDEO SIDE */
 #videoSide{
   width:60%;
   display:flex;
@@ -75,7 +74,7 @@ input{
   gap:15px;
 }
 
-/* 🔥 SQUARE CAMERA FIX */
+/* 🔥 SQUARE CAMERA */
 .videoBox{
   width:300px;
   height:300px;
@@ -90,7 +89,7 @@ input{
   object-fit:cover;
 }
 
-/* ===== CHAT SIDE ===== */
+/* CHAT SIDE */
 #chatSide{
   width:40%;
   display:flex;
@@ -104,7 +103,11 @@ input{
   overflow:auto;
 }
 
-/* ===== BUTTON ===== */
+.chatInput{
+  padding:10px;
+}
+
+/* BUTTON */
 button{
   padding:10px 15px;
   border:none;
@@ -121,19 +124,19 @@ button:hover{
   text-align:center;
 }
 
-/* ===== POPUP ===== */
-.popup{
+/* MODAL */
+.modal{
   display:none;
   position:fixed;
   top:30%;
   left:50%;
   transform:translate(-50%,-50%);
-  background:#111;
+  background:#222;
   padding:20px;
   border-radius:10px;
 }
 
-/* ===== MOBILE ===== */
+/* MOBILE */
 @media(max-width:768px){
   #main{
     flex-direction:column;
@@ -150,35 +153,41 @@ button:hover{
 <!-- LOGIN -->
 <div id="login">
 <h1>⚡ ZUNO ⚡</h1>
-<input id="name" placeholder="Enter Name"><br>
-<input id="age" type="number" placeholder="Enter Age"><br>
+<input id="name" placeholder="Name"><br>
+<input id="age" type="number" placeholder="Age"><br>
 <button onclick="login()">Enter</button><br>
-<button onclick="openPolicy()">Policy</button>
+<button onclick="openTerms()">Terms & Policy</button>
 </div>
 
-<!-- APP -->
+<!-- TERMS -->
+<div id="terms" class="modal">
+<h3>Terms & Policy</h3>
+<p>18+ only. No abuse. No nudity. Respect others.</p>
+<button onclick="closeTerms()">Close</button>
+</div>
+
+<!-- MAIN APP -->
 <div id="app">
 
-<!-- TOP -->
 <div class="top">
 
 <div class="left">
-<button onclick="watchAd()">🎬 Ads</button>
-<button onclick="openPolicy()">📜 Policy</button>
+<button onclick="watchAd()">Ads</button>
 </div>
 
 <div class="coin">🪙 <span id="coins">0</span></div>
 
 <div class="right">
-<button onclick="openReport()">🚨 Report</button>
+<button onclick="openPremium()">Premium</button>
+<button onclick="openReport()">Report</button>
+<button onclick="loadHistory()">History</button>
 </div>
 
 </div>
 
-<!-- MAIN -->
 <div id="main">
 
-<!-- LEFT VIDEO -->
+<!-- VIDEO -->
 <div id="videoSide">
 
 <div class="videoBox">
@@ -197,12 +206,12 @@ button:hover{
 
 </div>
 
-<!-- RIGHT CHAT -->
+<!-- CHAT -->
 <div id="chatSide">
 
 <div id="chat"></div>
 
-<div style="padding:10px;">
+<div class="chatInput">
 <input id="msg">
 <button onclick="send()">Send</button>
 </div>
@@ -213,23 +222,26 @@ button:hover{
 
 </div>
 
-<!-- REPORT -->
-<div id="reportBox" class="popup">
-<h3>Report User</h3>
-<button onclick="reportAction('Nude')">Nude</button>
-<button onclick="reportAction('Abuse')">Abuse</button>
-<button onclick="reportAction('Violence')">Violence</button>
-<button onclick="closeReport()">Close</button>
+<!-- PREMIUM -->
+<div id="premiumBox" class="modal">
+<h3>Premium</h3>
+<button onclick="buy(200,2)">Platinum (2h)</button>
+<button onclick="buy(500,10)">Gold (10h)</button>
+<button onclick="buy(1000,24)">Diamond (24h)</button>
 </div>
 
-<!-- POLICY -->
-<div id="policyBox" class="popup">
-<h3>Policy</h3>
-<p>18+ only</p>
-<p>No nudity</p>
-<p>No abuse</p>
-<p>No violence</p>
-<button onclick="closePolicy()">Close</button>
+<!-- REPORT -->
+<div id="reportBox" class="modal">
+<h3>Report</h3>
+<button onclick="ban()">Nudity</button>
+<button onclick="ban()">Violence</button>
+<button onclick="ban()">Abuse</button>
+</div>
+
+<!-- HISTORY -->
+<div id="historyBox" class="modal">
+<h3>History</h3>
+<ul id="historyList"></ul>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
