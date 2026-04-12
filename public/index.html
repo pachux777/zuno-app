@@ -16,7 +16,6 @@ body{
 /* LOGIN */
 #loginPage{margin-top:100px;}
 
-/* INPUT */
 input{
   padding:10px;
   margin:8px;
@@ -34,7 +33,7 @@ button{
   margin:5px;
 }
 
-/* COINS UI */
+/* TOP BAR */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -42,6 +41,7 @@ button{
   background:#111;
 }
 
+/* COIN UI */
 .coinBox{
   background:gold;
   color:black;
@@ -67,12 +67,13 @@ video{
 #loading{
   display:none;
   font-size:20px;
+  margin:10px;
 }
 
 /* TYPING */
 #typing{
-  font-style:italic;
   color:gray;
+  font-style:italic;
 }
 
 /* MOBILE */
@@ -85,6 +86,7 @@ video{
 
 <body>
 
+<!-- LOGIN -->
 <div id="loginPage">
 <h1>ZUNO</h1>
 <input id="name" placeholder="Name"><br>
@@ -92,6 +94,7 @@ video{
 <button onclick="login()">ENTER</button>
 </div>
 
+<!-- APP -->
 <div id="app" style="display:none;">
 
 <div class="topbar">
@@ -114,7 +117,6 @@ video{
 <button onclick="sendMsg()">Send</button>
 
 <div id="typing"></div>
-
 <div id="chatBox"></div>
 
 </div>
