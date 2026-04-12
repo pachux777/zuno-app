@@ -1,11 +1,7 @@
 let socket, peer, localStream;
 
 let coins = parseInt(localStorage.getItem("coins")) || 0;
-let premium = parseInt(localStorage.getItem("premium")) || 0;
-
-const AD_URL = "https://pl29131156.profitablecpmratenetwork.com/8d/99/98/8d99989f643f0ceb74dababf43137ed4.js";
-
-updateUI();
+updateCoins();
 
 // LOGIN
 function login(){
@@ -15,66 +11,46 @@ function login(){
   if(!name || !age) return alert("Fill all");
   if(age < 18) return alert("18+ only");
 
-  loginPage.style.display="none";
-  app.style.display="block";
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("app").style.display="block";
 
   socket = io();
   setupSocket();
 }
 
-// UPDATE UI
-function updateUI(){
+// COINS
+function updateCoins(){
   document.getElementById("coins").innerText = coins;
-  document.getElementById("premiumTime").innerText = Math.floor(premium/60)+"m";
-
   localStorage.setItem("coins",coins);
-  localStorage.setItem("premium",premium);
 }
 
-// AD REWARD
 function watchAd(){
-  let s = document.createElement("script");
-  s.src = AD_URL;
-  document.body.appendChild(s);
-
-  setTimeout(()=>{
-    coins += 20;
-    updateUI();
-  },2000);
+  coins += 20;
+  updateCoins();
 }
 
-// PREMIUM
-function openPremium(){ premiumUI.style.display="flex"; }
-function closePremium(){ premiumUI.style.display="none"; }
-
-function buy(cost,hours){
-  if(coins < cost) return alert("Not enough coins");
-
-  coins -= cost;
-  premium += hours * 3600;
-
-  updateUI();
-}
-
-// TIMER
-setInterval(()=>{
-  if(premium > 0){
-    premium--;
-    updateUI();
-  }
-},1000);
-
-// CAMERA
+// START
 async function startChat(){
+  document.getElementById("loading").style.display="block";
+
   localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  localVideo.srcObject = localStream;
+  document.getElementById("localVideo").srcObject = localStream;
+
   socket.emit("start");
 }
 
 // SOCKET
 function setupSocket(){
 
-  socket.on("matched",()=>createPeer());
+  socket.on("matched",()=>{
+    document.getElementById("loading").style.display="none";
+    createPeer();
+  });
+
+  socket.on("typing",()=>{
+    document.getElementById("typing").innerText="Stranger typing...";
+    setTimeout(()=>typing.innerText="",2000);
+  });
 
   socket.on("signal",async(data)=>{
     if(!peer) createPeer();
@@ -94,7 +70,9 @@ function setupSocket(){
   });
 
   socket.on("message",(d)=>{
-    chatBox.innerHTML += "<div>"+d.name+": "+d.text+"</div>";
+    let div = document.createElement("div");
+    div.innerText = d.name + ": " + d.text;
+    document.getElementById("chatBox").appendChild(div);
   });
 }
 
@@ -106,7 +84,9 @@ function createPeer(){
 
   localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
 
-  peer.ontrack=e=>remoteVideo.srcObject=e.streams[0];
+  peer.ontrack=e=>{
+    document.getElementById("remoteVideo").srcObject = e.streams[0];
+  };
 
   peer.onicecandidate=e=>{
     if(e.candidate){
@@ -120,26 +100,27 @@ function createPeer(){
   });
 }
 
-// AI FILTER
-const badWords = ["nude","xxx","sex","bad"];
-
-function sendMsg(){
-  let msg = document.getElementById("msg").value;
-
-  for(let w of badWords){
-    if(msg.toLowerCase().includes(w)){
-      alert("Blocked 🚫");
-      socket.emit("report");
-      return;
-    }
-  }
-
-  socket.emit("message",msg);
+// TYPING
+function typing(){
+  if(socket) socket.emit("typing");
 }
 
-// REPORT
-function reportUser(){
-  socket.emit("report");
+// SEND MESSAGE
+function sendMsg(){
+  if(!socket) return;
+
+  let input = document.getElementById("msg");
+  let msg = input.value.trim();
+
+  if(msg==="") return;
+
+  socket.emit("message",msg);
+
+  let div = document.createElement("div");
+  div.innerText = "You: " + msg;
+  document.getElementById("chatBox").appendChild(div);
+
+  input.value="";
 }
 
 // NEXT
