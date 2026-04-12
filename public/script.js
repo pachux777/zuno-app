@@ -1,56 +1,86 @@
 let socket, peer, localStream;
 
-// coins (frontend only ✅ safe)
 let coins = parseInt(localStorage.getItem("coins")) || 0;
-updateCoins();
+let history = [];
 
-// LOGIN
+updateUI();
+
 function login(){
-  let name = document.getElementById("name").value;
-  let age = document.getElementById("age").value;
+  let name = nameInput.value;
+  let age = ageInput.value;
 
   if(!name || !age) return alert("Fill all");
   if(age < 18) return alert("18+ only");
 
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="block";
+  loginPage.style.display="none";
+  app.style.display="block";
 
   socket = io();
   setupSocket();
 }
 
-// COINS
-function updateCoins(){
-  document.getElementById("coins").innerText = coins;
+function updateUI(){
+  coinsEl.innerText = coins;
   localStorage.setItem("coins",coins);
 }
 
 function watchAd(){
   coins += 20;
-  updateCoins();
+  updateUI();
 }
 
-// START CHAT
+function openPremium(){
+  alert("Premium coming soon");
+}
+
+function showHistory(){
+  alert(history.join("\n") || "No history");
+}
+
+function reportUser(){
+  if(socket) socket.emit("report");
+  alert("Reported");
+}
+
 async function startChat(){
-  document.getElementById("loading").style.display="block";
+  loading.style.display="block";
 
   localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  document.getElementById("localVideo").srcObject = localStream;
+  localVideo.srcObject = localStream;
 
   socket.emit("start");
 }
 
-// SOCKET
+function endChat(){
+  loading.style.display="none";
+
+  if(peer) peer.close();
+  if(socket) socket.disconnect();
+
+  if(localStream){
+    localStream.getTracks().forEach(t=>t.stop());
+  }
+}
+
+function nextUser(){
+  if(peer) peer.close();
+  socket.emit("next");
+}
+
 function setupSocket(){
 
   socket.on("matched",()=>{
-    document.getElementById("loading").style.display="none";
+    loading.style.display="none";
     createPeer();
   });
 
   socket.on("typing",()=>{
-    document.getElementById("typing").innerText="Stranger typing...";
-    setTimeout(()=>document.getElementById("typing").innerText="",2000);
+    typingDiv.innerText="Stranger typing...";
+    setTimeout(()=>typingDiv.innerText="",2000);
+  });
+
+  socket.on("message",(d)=>{
+    addMessage(d.name+": "+d.text);
   });
 
   socket.on("signal",async(data)=>{
@@ -58,6 +88,7 @@ function setupSocket(){
 
     if(data.sdp){
       await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
       if(data.sdp.type==="offer"){
         let ans = await peer.createAnswer();
         await peer.setLocalDescription(ans);
@@ -69,15 +100,8 @@ function setupSocket(){
       await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
   });
-
-  socket.on("message",(d)=>{
-    let div = document.createElement("div");
-    div.innerText = d.name + ": " + d.text;
-    document.getElementById("chatBox").appendChild(div);
-  });
 }
 
-// WEBRTC
 function createPeer(){
   peer = new RTCPeerConnection({
     iceServers:[{urls:"stun:stun.l.google.com:19302"}]
@@ -86,7 +110,7 @@ function createPeer(){
   localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
 
   peer.ontrack=e=>{
-    document.getElementById("remoteVideo").srcObject = e.streams[0];
+    remoteVideo.srcObject = e.streams[0];
   };
 
   peer.onicecandidate=e=>{
@@ -101,40 +125,24 @@ function createPeer(){
   });
 }
 
-// TYPING
 function typing(){
   if(socket) socket.emit("typing");
 }
 
-// SEND MESSAGE (FIXED)
 function sendMsg(){
-  if(!socket) return;
+  let msg = msgInput.value.trim();
+  if(msg==="") return;
 
-  let input = document.getElementById("msg");
-  let msg = input.value.trim();
+  socket.emit("message",msg);
+  addMessage("You: "+msg);
 
-  if(msg === "") return;
+  msgInput.value="";
+}
 
-  socket.emit("message", msg);
-
+function addMessage(text){
   let div = document.createElement("div");
-  div.innerText = "You: " + msg;
-  document.getElementById("chatBox").appendChild(div);
+  div.innerText = text;
+  chatBox.appendChild(div);
 
-  input.value = "";
-}
-
-// NEXT
-function nextUser(){
-  if(peer) peer.close();
-  socket.emit("next");
-}
-
-// END
-function endChat(){
-  if(peer) peer.close();
-  if(socket) socket.disconnect();
-  if(localStream){
-    localStream.getTracks().forEach(t=>t.stop());
-  }
+  history.push(text);
 }
