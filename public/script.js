@@ -1,9 +1,34 @@
+// ================== GLOBAL ==================
 let socket;
 let peer;
 let localStream;
 let history = [];
 
-// LOGIN
+// ================== AD CONTROL ==================
+const AD_URL = "https://pl29131156.profitablecpmratenetwork.com/8d/99/98/8d99989f643f0ceb74dababf43137ed4.js";
+
+let lastAdTime = 0;
+let clickCount = 0;
+
+function triggerAd() {
+  const now = Date.now();
+  clickCount++;
+
+  // show ad only every 30 sec
+  if (now - lastAdTime < 30000) return;
+
+  // show ad only every 3 clicks
+  if (clickCount % 3 !== 0) return;
+
+  let s = document.createElement("script");
+  s.src = AD_URL;
+  s.async = true;
+  document.body.appendChild(s);
+
+  lastAdTime = now;
+}
+
+// ================== LOGIN ==================
 function login() {
   let name = document.getElementById("username").value;
   let age = document.getElementById("age").value;
@@ -14,7 +39,7 @@ function login() {
   }
 
   if (age < 18) {
-    alert("Only 18+ allowed");
+    alert("18+ only");
     return;
   }
 
@@ -27,7 +52,7 @@ function login() {
   setupSocket();
 }
 
-// CAMERA
+// ================== CAMERA ==================
 async function startCamera() {
   localStream = await navigator.mediaDevices.getUserMedia({
     video: true,
@@ -37,14 +62,16 @@ async function startCamera() {
   document.getElementById("localVideo").srcObject = localStream;
 }
 
-// START CHAT
+// ================== START ==================
 function startChat() {
   startCamera();
   socket.emit("start");
   document.getElementById("status").innerText = "Searching...";
+
+  triggerAd(); // 🔥 show ad smartly
 }
 
-// SOCKET
+// ================== SOCKET ==================
 function setupSocket() {
 
   socket.on("matched", () => {
@@ -81,7 +108,7 @@ function setupSocket() {
   });
 }
 
-// WEBRTC
+// ================== WEBRTC ==================
 function createPeer() {
   peer = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
@@ -107,7 +134,7 @@ function createPeer() {
   });
 }
 
-// CHAT
+// ================== CHAT ==================
 function sendMsg() {
   let input = document.getElementById("msgInput");
 
@@ -121,17 +148,18 @@ function addMessage(msg) {
   let div = document.createElement("div");
   div.innerText = msg;
   document.getElementById("chatBox").appendChild(div);
+
   history.push(msg);
 }
 
-// HISTORY
+// ================== HISTORY ==================
 function showHistory() {
   alert(history.join("\n") || "No history");
 }
 
-// EXTRA FEATURES
+// ================== EXTRA FEATURES ==================
 function coins() {
-  alert("Coins system coming soon");
+  alert("Coins system coming soon 💰");
 }
 
 function reportUser() {
@@ -142,12 +170,15 @@ function toggleTheatre() {
   document.getElementById("videoBox").classList.toggle("big");
 }
 
-// NEXT / END
+// ================== NEXT ==================
 function nextUser() {
   if (peer) peer.close();
   socket.emit("next");
+
+  triggerAd(); // 🔥 controlled ad
 }
 
+// ================== END ==================
 function endChat() {
   if (peer) {
     peer.close();
