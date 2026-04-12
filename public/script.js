@@ -1,50 +1,34 @@
-// ================== GLOBAL ==================
 let socket;
 let peer;
 let localStream;
-let history = [];
 
-// ================== AD CONTROL ==================
+// ===== AD CONTROL =====
 const AD_URL = "https://pl29131156.profitablecpmratenetwork.com/8d/99/98/8d99989f643f0ceb74dababf43137ed4.js";
 
 let lastAdTime = 0;
-let clickCount = 0;
 
-function triggerAd() {
-  const now = Date.now();
-  clickCount++;
+function triggerAd(){
+  let now = Date.now();
 
-  // show ad only every 30 sec
-  if (now - lastAdTime < 30000) return;
-
-  // show ad only every 3 clicks
-  if (clickCount % 3 !== 0) return;
+  if(now - lastAdTime < 30000) return;
 
   let s = document.createElement("script");
   s.src = AD_URL;
-  s.async = true;
   document.body.appendChild(s);
 
   lastAdTime = now;
 }
 
-// ================== LOGIN ==================
-function login() {
+// ===== LOGIN =====
+function login(){
   let name = document.getElementById("username").value;
   let age = document.getElementById("age").value;
 
-  if (!name || !age) {
-    alert("Fill all fields");
-    return;
-  }
+  if(!name || !age) return alert("Fill all fields");
+  if(age < 18) return alert("18+ only");
 
-  if (age < 18) {
-    alert("18+ only");
-    return;
-  }
-
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("app").style.display = "block";
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("app").style.display="block";
 
   socket = io();
   socket.emit("set-name", name);
@@ -52,144 +36,122 @@ function login() {
   setupSocket();
 }
 
-// ================== CAMERA ==================
-async function startCamera() {
+// ===== CAMERA =====
+async function startCamera(){
   localStream = await navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: true
+    video:true,
+    audio:true
   });
 
   document.getElementById("localVideo").srcObject = localStream;
 }
 
-// ================== START ==================
-function startChat() {
+// ===== START =====
+function startChat(){
   startCamera();
   socket.emit("start");
-  document.getElementById("status").innerText = "Searching...";
-
-  triggerAd(); // 🔥 show ad smartly
+  triggerAd();
 }
 
-// ================== SOCKET ==================
-function setupSocket() {
+// ===== SOCKET =====
+function setupSocket(){
 
-  socket.on("matched", () => {
-    document.getElementById("status").innerText = "Connected 🔥";
+  socket.on("matched", ()=>{
     createPeer();
   });
 
-  socket.on("signal", async (data) => {
-    if (!peer) createPeer();
+  socket.on("signal", async (data)=>{
+    if(!peer) createPeer();
 
-    if (data.sdp) {
+    if(data.sdp){
       await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
 
-      if (data.sdp.type === "offer") {
-        let answer = await peer.createAnswer();
-        await peer.setLocalDescription(answer);
-        socket.emit("signal", { sdp: peer.localDescription });
+      if(data.sdp.type==="offer"){
+        let ans = await peer.createAnswer();
+        await peer.setLocalDescription(ans);
+        socket.emit("signal",{sdp:peer.localDescription});
       }
     }
 
-    if (data.candidate) {
+    if(data.candidate){
       await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
   });
 
-  socket.on("message", (data) => {
-    addMessage(data.name + ": " + data.text);
+  socket.on("message",(data)=>{
+    let div = document.createElement("div");
+    div.innerText = data.name + ": " + data.text;
+    document.getElementById("chatBox").appendChild(div);
   });
 
-  socket.on("partner-disconnected", () => {
-    document.getElementById("status").innerText = "Searching...";
-    if (peer) peer.close();
+  socket.on("partner-disconnected", ()=>{
+    if(peer) peer.close();
     document.getElementById("remoteVideo").srcObject = null;
   });
 }
 
-// ================== WEBRTC ==================
-function createPeer() {
+// ===== WEBRTC =====
+function createPeer(){
   peer = new RTCPeerConnection({
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
   });
 
-  localStream.getTracks().forEach(track => {
-    peer.addTrack(track, localStream);
-  });
+  localStream.getTracks().forEach(t=>peer.addTrack(t, localStream));
 
-  peer.ontrack = (event) => {
-    document.getElementById("remoteVideo").srcObject = event.streams[0];
+  peer.ontrack = e=>{
+    document.getElementById("remoteVideo").srcObject = e.streams[0];
   };
 
-  peer.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.emit("signal", { candidate: event.candidate });
+  peer.onicecandidate = e=>{
+    if(e.candidate){
+      socket.emit("signal",{candidate:e.candidate});
     }
   };
 
-  peer.createOffer().then(offer => {
-    peer.setLocalDescription(offer);
-    socket.emit("signal", { sdp: offer });
+  peer.createOffer().then(o=>{
+    peer.setLocalDescription(o);
+    socket.emit("signal",{sdp:o});
   });
 }
 
-// ================== CHAT ==================
-function sendMsg() {
+// ===== CHAT =====
+function sendMsg(){
   let input = document.getElementById("msgInput");
 
   socket.emit("message", input.value);
-  addMessage("You: " + input.value);
 
-  input.value = "";
-}
-
-function addMessage(msg) {
   let div = document.createElement("div");
-  div.innerText = msg;
+  div.innerText = "You: " + input.value;
   document.getElementById("chatBox").appendChild(div);
 
-  history.push(msg);
+  input.value="";
 }
 
-// ================== HISTORY ==================
-function showHistory() {
-  alert(history.join("\n") || "No history");
-}
-
-// ================== EXTRA FEATURES ==================
-function coins() {
-  alert("Coins system coming soon 💰");
-}
-
-function reportUser() {
-  alert("User reported 🚨");
-}
-
-function toggleTheatre() {
-  document.getElementById("videoBox").classList.toggle("big");
-}
-
-// ================== NEXT ==================
-function nextUser() {
-  if (peer) peer.close();
+// ===== NEXT =====
+function nextUser(){
+  if(peer) peer.close();
   socket.emit("next");
-
-  triggerAd(); // 🔥 controlled ad
+  triggerAd();
 }
 
-// ================== END ==================
-function endChat() {
-  if (peer) {
+// ===== END (FIXED) =====
+function endChat(){
+  if(peer){
     peer.close();
     peer = null;
   }
 
-  if (socket) {
+  if(socket){
     socket.disconnect();
     socket = null;
   }
 
+  if(localStream){
+    localStream.getTracks().forEach(track => track.stop());
+  }
+
+  document.getElementById("localVideo").srcObject = null;
   document.getElementById("remoteVideo").srcObject = null;
-  document.getElementById("status").innerText = "Ended";
+
+  alert("Chat Ended");
 }
