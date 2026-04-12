@@ -1,157 +1,73 @@
-let socket;
-let peer;
-let localStream;
+let socket, peer, localStream;
 
-let coins = parseInt(localStorage.getItem("coins")) || 0;
+let coins = parseInt(localStorage.getItem("coins")) || 100;
+let premium = parseInt(localStorage.getItem("premium")) || 0;
 let history = [];
+
+const AD_SCRIPT = "https://pl29131156.profitablecpmratenetwork.com/8d/99/98/8d99989f643f0ceb74dababf43137ed4.js";
 
 updateUI();
 
-// login
+/* LOGIN */
 function login(){
-  let name = document.getElementById("name").value;
-  let age = document.getElementById("age").value;
+  if(age.value < 18) return alert("18+ only");
 
-  if(!name || !age) return alert("Fill all");
-  if(age < 18) return alert("18+ only");
-
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="block";
+  loginPage.style.display="none";
+  app.style.display="block";
 
   socket = io();
   setupSocket();
 }
 
-// coins
+/* UI */
 function updateUI(){
-  document.getElementById("coins").innerText = coins;
-  localStorage.setItem("coins", coins);
+  coinsEl.innerText = coins;
+  localStorage.setItem("coins",coins);
 }
 
+/* ADS FIXED */
 function watchAd(){
-  coins += 20;
+  let s = document.createElement("script");
+  s.src = AD_SCRIPT;
+  document.body.appendChild(s);
+
+  setTimeout(()=>{
+    coins += 20;
+    updateUI();
+  },3000);
+}
+
+/* AUTO ADS */
+setInterval(watchAd,600000);
+
+/* PREMIUM */
+function openPremium(){
+  let choice = prompt("1=Platinum(200)\n2=Gold(500)\n3=Diamond(1000)");
+
+  if(choice==1 && coins>=200){coins-=200; premium+=7200;}
+  if(choice==2 && coins>=500){coins-=500; premium+=36000;}
+  if(choice==3 && coins>=1000){coins-=1000; premium+=86400;}
+
   updateUI();
 }
 
-// history
-function showHistory(){
-  alert(history.length ? history.join("\n") : "No history");
-}
-
-// report
-function reportUser(){
-  alert("Reported 🚨");
-}
-
-// start chat
+/* CHAT */
 async function startChat(){
-  document.getElementById("loading").style.display="block";
+  if(coins < 2) return alert("Need coins");
+
+  coins -= 2;
+  updateUI();
+
+  loading.style.display="block";
 
   localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  document.getElementById("localVideo").srcObject = localStream;
+  localVideo.srcObject = localStream;
 
   socket.emit("start");
 }
 
-// socket setup
-function setupSocket(){
-
-  socket.on("matched", ()=>{
-    document.getElementById("loading").style.display="none";
-    createPeer();
-  });
-
-  socket.on("typing", ()=>{
-    document.getElementById("typing").innerText = "Stranger typing...";
-    setTimeout(()=>document.getElementById("typing").innerText="",2000);
-  });
-
-  socket.on("message",(data)=>{
-    addMessage(data.name + ": " + data.text);
-  });
-
-  socket.on("signal", async (data)=>{
-    if(!peer) createPeer();
-
-    if(data.sdp){
-      await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
-
-      if(data.sdp.type === "offer"){
-        const answer = await peer.createAnswer();
-        await peer.setLocalDescription(answer);
-        socket.emit("signal",{sdp:peer.localDescription});
-      }
-    }
-
-    if(data.candidate){
-      await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
-    }
-  });
-
-}
-
-// peer
-function createPeer(){
-  peer = new RTCPeerConnection({
-    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
-  });
-
-  localStream.getTracks().forEach(track=>{
-    peer.addTrack(track, localStream);
-  });
-
-  peer.ontrack = (e)=>{
-    document.getElementById("remoteVideo").srcObject = e.streams[0];
-  };
-
-  peer.onicecandidate = (e)=>{
-    if(e.candidate){
-      socket.emit("signal",{candidate:e.candidate});
-    }
-  };
-
-  peer.createOffer().then(offer=>{
-    peer.setLocalDescription(offer);
-    socket.emit("signal",{sdp:offer});
-  });
-}
-
-// typing
-function typing(){
-  if(socket) socket.emit("typing");
-}
-
-// send message
-function sendMsg(){
-  const input = document.getElementById("msg");
-  const msg = input.value.trim();
-
-  if(!msg) return;
-
-  socket.emit("message", msg);
-  addMessage("You: " + msg);
-
-  input.value = "";
-}
-
-// message
-function addMessage(text){
-  const div = document.createElement("div");
-  div.innerText = text;
-  document.getElementById("chatBox").appendChild(div);
-
-  history.push(text);
-}
-
-// next
-function nextUser(){
-  if(peer) peer.close();
-  socket.emit("next");
-}
-
-// end
 function endChat(){
-  document.getElementById("loading").style.display="none";
+  loading.style.display="none";
 
   if(peer) peer.close();
   if(socket) socket.disconnect();
@@ -160,3 +76,85 @@ function endChat(){
     localStream.getTracks().forEach(t=>t.stop());
   }
 }
+
+/* SOCKET */
+function setupSocket(){
+
+  socket.on("matched",()=>{
+    loading.style.display="none";
+    createPeer();
+  });
+
+  socket.on("typing",()=>{
+    typing.innerText="Typing...";
+    setTimeout(()=>typing.innerText="",2000);
+  });
+
+  socket.on("message",(d)=>{
+    addMsg(d.name+": "+d.text);
+  });
+
+  socket.on("signal",async(data)=>{
+    if(!peer) createPeer();
+
+    if(data.sdp){
+      await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
+      if(data.sdp.type==="offer"){
+        let ans = await peer.createAnswer();
+        await peer.setLocalDescription(ans);
+        socket.emit("signal",{sdp:peer.localDescription});
+      }
+    }
+
+    if(data.candidate){
+      await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
+    }
+  });
+}
+
+/* PEER */
+function createPeer(){
+  peer = new RTCPeerConnection({
+    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+  });
+
+  localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
+
+  peer.ontrack=e=>remoteVideo.srcObject=e.streams[0];
+
+  peer.onicecandidate=e=>{
+    if(e.candidate){
+      socket.emit("signal",{candidate:e.candidate});
+    }
+  };
+
+  peer.createOffer().then(o=>{
+    peer.setLocalDescription(o);
+    socket.emit("signal",{sdp:o});
+  });
+}
+
+/* MESSAGE */
+function sendMsg(){
+  let msg = document.getElementById("msg").value.trim();
+  if(!msg) return;
+
+  socket.emit("message",msg);
+  addMsg("You: "+msg);
+
+  msg.value="";
+}
+
+function addMsg(text){
+  let d=document.createElement("div");
+  d.innerText=text;
+  chatBox.appendChild(d);
+  history.push(text);
+}
+
+/* EXTRA */
+function typing(){ socket.emit("typing"); }
+function nextUser(){ if(peer) peer.close(); socket.emit("next"); }
+function showHistory(){ alert(history.join("\n")); }
+function reportUser(){ alert("Reported 🚨"); }
