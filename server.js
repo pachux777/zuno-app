@@ -10,69 +10,61 @@ app.use(express.static("public"));
 
 let waiting = [];
 
-function matchUser(socket){
-  if(waiting.length > 0){
-    const partner = waiting.shift();
+io.on("connection", (socket) => {
 
-    socket.partner = partner;
-    partner.partner = socket;
+  socket.user = {
+    id: socket.id,
+    history: []
+  };
 
-    socket.emit("matched");
-    partner.emit("matched");
-  } else {
-    waiting.push(socket);
+  function match() {
+    if (waiting.length > 0) {
+      const partner = waiting.shift();
+
+      socket.partner = partner;
+      partner.partner = socket;
+
+      socket.user.history.push(partner.id);
+      partner.user.history.push(socket.id);
+
+      socket.emit("matched");
+      partner.emit("matched");
+    } else {
+      waiting.push(socket);
+    }
   }
-}
 
-io.on("connection",(socket)=>{
+  socket.on("start", match);
 
-  console.log("User connected:", socket.id);
-
-  socket.on("start",()=>{
-    matchUser(socket);
-  });
-
-  socket.on("message",(msg)=>{
-    if(socket.partner){
-      socket.partner.emit("message",{
-        name:"Stranger",
-        text:msg
-      });
+  socket.on("message", (msg) => {
+    if (socket.partner) {
+      socket.partner.emit("message", msg);
     }
   });
 
-  socket.on("next",()=>{
-    if(socket.partner){
+  socket.on("next", () => {
+    if (socket.partner) {
+      socket.partner.emit("end");
       socket.partner.partner = null;
-      socket.partner.emit("partner-disconnected");
     }
     socket.partner = null;
-    matchUser(socket);
+    match();
   });
 
-  socket.on("end",()=>{
-    if(socket.partner){
-      socket.partner.emit("partner-disconnected");
+  socket.on("end", () => {
+    if (socket.partner) {
+      socket.partner.emit("end");
       socket.partner.partner = null;
     }
     socket.partner = null;
   });
 
-  socket.on("disconnect",()=>{
-    waiting = waiting.filter(u => u !== socket);
-
-    if(socket.partner){
-      socket.partner.emit("partner-disconnected");
-      socket.partner.partner = null;
-    }
-
-    console.log("User disconnected:", socket.id);
+  socket.on("getHistory", () => {
+    socket.emit("history", socket.user.history);
   });
 
 });
 
-const PORT = process.env.PORT || 10000;
-
-server.listen(PORT,"0.0.0.0",()=>{
-  console.log("Server running on port", PORT);
+server.listen(process.env.PORT || 10000, () => {
+  console.log("Server running");
 });
