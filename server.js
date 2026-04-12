@@ -6,14 +6,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// serve frontend
 app.use(express.static("public"));
 
-let waiting = [];
+let waitingUsers = [];
 
-function match(socket){
-  if(waiting.length > 0){
-    const partner = waiting.shift();
+function matchUser(socket){
+  if(waitingUsers.length > 0){
+    const partner = waitingUsers.shift();
 
     socket.partner = partner;
     partner.partner = socket;
@@ -21,17 +20,23 @@ function match(socket){
     socket.emit("matched");
     partner.emit("matched");
   } else {
-    waiting.push(socket);
+    waitingUsers.push(socket);
   }
 }
 
 io.on("connection",(socket)=>{
 
-  socket.on("start",()=>match(socket));
+  socket.on("start",()=>matchUser(socket));
 
   socket.on("message",(msg)=>{
     if(socket.partner){
       socket.partner.emit("message",{name:"Stranger",text:msg});
+    }
+  });
+
+  socket.on("typing",()=>{
+    if(socket.partner){
+      socket.partner.emit("typing");
     }
   });
 
@@ -41,18 +46,17 @@ io.on("connection",(socket)=>{
       socket.partner.emit("partner-disconnected");
     }
     socket.partner = null;
-    match(socket);
+    matchUser(socket);
   });
 
   socket.on("disconnect",()=>{
-    waiting = waiting.filter(u => u !== socket);
+    waitingUsers = waitingUsers.filter(u=>u!==socket);
   });
 
 });
 
-// IMPORTANT FIX
 const PORT = process.env.PORT || 10000;
 
-server.listen(PORT, "0.0.0.0", ()=>{
+server.listen(PORT,"0.0.0.0",()=>{
   console.log("Server running on port " + PORT);
 });
