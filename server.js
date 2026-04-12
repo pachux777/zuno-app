@@ -8,54 +8,45 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-let waitingUsers = [];
+let waiting = [];
 
-function match(socket){
-  if(waitingUsers.length > 0){
-    const partner = waitingUsers.shift();
-
-    socket.partner = partner;
-    partner.partner = socket;
-
-    socket.emit("matched");
-    partner.emit("matched");
+function match(s){
+  if(waiting.length){
+    let p = waiting.shift();
+    s.partner = p;
+    p.partner = s;
+    s.emit("matched");
+    p.emit("matched");
   } else {
-    waitingUsers.push(socket);
+    waiting.push(s);
   }
 }
 
-io.on("connection",(socket)=>{
+io.on("connection",(s)=>{
 
-  socket.on("start",()=>match(socket));
+  s.on("start",()=>match(s));
 
-  socket.on("signal",(data)=>{
-    if(socket.partner){
-      socket.partner.emit("signal",data);
-    }
+  s.on("signal",(d)=>{
+    if(s.partner) s.partner.emit("signal",d);
   });
 
-  socket.on("message",(msg)=>{
-    if(socket.partner){
-      socket.partner.emit("message",{name:"Stranger",text:msg});
-    }
+  s.on("message",(m)=>{
+    if(s.partner) s.partner.emit("message",{name:"Stranger",text:m});
   });
 
-  socket.on("typing",()=>{
-    if(socket.partner){
-      socket.partner.emit("typing");
-    }
+  s.on("typing",()=>{
+    if(s.partner) s.partner.emit("typing");
   });
 
-  socket.on("next",()=>{
-    if(socket.partner){
-      socket.partner.emit("partner-disconnected");
-      socket.partner.partner=null;
+  s.on("next",()=>{
+    if(s.partner){
+      s.partner.emit("partner-disconnected");
+      s.partner.partner=null;
     }
-    socket.partner=null;
-    match(socket);
+    s.partner=null;
+    match(s);
   });
 
 });
 
-const PORT = process.env.PORT || 10000;
-server.listen(PORT,"0.0.0.0",()=>console.log("Server running"));
+server.listen(process.env.PORT||10000,"0.0.0.0");
