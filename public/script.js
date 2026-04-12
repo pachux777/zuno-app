@@ -3,6 +3,8 @@ let socket, peer, localStream;
 let coins = parseInt(localStorage.getItem("coins")) || 0;
 let premium = parseInt(localStorage.getItem("premium")) || 0;
 
+const AD_URL = "https://pl29131156.profitablecpmratenetwork.com/8d/99/98/8d99989f643f0ceb74dababf43137ed4.js";
+
 updateUI();
 
 // LOGIN
@@ -22,21 +24,23 @@ function login(){
 
 // UPDATE UI
 function updateUI(){
-  coinsEl = document.getElementById("coins");
-  timeEl = document.getElementById("premiumTime");
-
-  if(coinsEl) coinsEl.innerText = coins;
-  if(timeEl) timeEl.innerText = Math.floor(premium/60)+"m";
+  document.getElementById("coins").innerText = coins;
+  document.getElementById("premiumTime").innerText = Math.floor(premium/60)+"m";
 
   localStorage.setItem("coins",coins);
   localStorage.setItem("premium",premium);
 }
 
-// WATCH AD
+// AD REWARD
 function watchAd(){
-  alert("Ad watched +20 coins");
-  coins += 20;
-  updateUI();
+  let s = document.createElement("script");
+  s.src = AD_URL;
+  document.body.appendChild(s);
+
+  setTimeout(()=>{
+    coins += 20;
+    updateUI();
+  },2000);
 }
 
 // PREMIUM
@@ -50,7 +54,6 @@ function buy(cost,hours){
   premium += hours * 3600;
 
   updateUI();
-  alert("Premium activated");
 }
 
 // TIMER
@@ -117,12 +120,26 @@ function createPeer(){
   });
 }
 
-// CHAT
+// AI FILTER
+const badWords = ["nude","xxx","sex","bad"];
+
 function sendMsg(){
   let msg = document.getElementById("msg").value;
-  if(!msg) return;
+
+  for(let w of badWords){
+    if(msg.toLowerCase().includes(w)){
+      alert("Blocked 🚫");
+      socket.emit("report");
+      return;
+    }
+  }
 
   socket.emit("message",msg);
+}
+
+// REPORT
+function reportUser(){
+  socket.emit("report");
 }
 
 // NEXT
