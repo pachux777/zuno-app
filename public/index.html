@@ -7,27 +7,21 @@
 <style>
 body{
   margin:0;
-  background:#000;
+  background:#0a0a0a;
   color:white;
   font-family:Arial;
   text-align:center;
 }
 
-/* LOGIN FULL SCREEN */
+/* LOGIN */
 #loginPage{
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+  margin-top:100px;
 }
 
 input{
-  width:80%;
-  padding:15px;
-  margin:10px;
-  font-size:18px;
-  border-radius:10px;
+  padding:10px;
+  margin:8px;
+  border-radius:8px;
   border:none;
 }
 
@@ -38,24 +32,20 @@ input{
   padding:10px;
 }
 
+/* BUTTON */
 button{
-  padding:10px;
+  padding:8px 12px;
   border:none;
-  border-radius:10px;
-  margin:5px;
+  border-radius:8px;
+  background:cyan;
   cursor:pointer;
-  transition:0.2s;
-}
-
-button:active{
-  transform:scale(0.9);
 }
 
 /* VIDEO */
 #videoBox{
   display:flex;
-  gap:10px;
   justify-content:center;
+  gap:20px;
 }
 
 video{
@@ -65,45 +55,34 @@ video{
   border-radius:10px;
 }
 
-/* MOBILE */
+/* MOBILE ONLY BIG UI */
 @media(max-width:768px){
+
+  #loginPage{
+    margin-top:0;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+
+  input{
+    width:80%;
+    padding:15px;
+    font-size:18px;
+  }
+
+  button{
+    width:80%;
+    font-size:18px;
+    padding:15px;
+  }
+
   video{
     width:48%;
     height:300px;
   }
-
-  button{
-    width:90%;
-    font-size:18px;
-  }
 }
-
-/* PREMIUM FULL SCREEN */
-#premiumUI{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#111;
-  display:none;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-}
-
-/* CARDS */
-.card{
-  background:#222;
-  padding:20px;
-  margin:10px;
-  border-radius:15px;
-  width:80%;
-}
-
-.gold{background:gold;color:black;}
-.blue{background:cyan;color:black;}
-.pink{background:magenta;}
 </style>
 </head>
 
@@ -112,7 +91,10 @@ video{
 <!-- LOGIN -->
 <div id="loginPage">
 <h1>ZUNO</h1>
-<input id="age" type="number" placeholder="Enter Age">
+
+<input id="name" placeholder="Enter Name"><br>
+<input id="age" type="number" placeholder="Enter Age"><br>
+
 <button onclick="login()">ENTER</button>
 </div>
 
@@ -120,14 +102,8 @@ video{
 <div id="app" style="display:none;">
 
 <div class="topbar">
-<div>
-🪙 <span id="coinCount">0</span>
+<div>🪙 <span id="coins">0</span></div>
 <button onclick="watchAd()">+20</button>
-</div>
-
-<div>
-<button onclick="openPremium()">💎</button>
-</div>
 </div>
 
 <div id="videoBox">
@@ -135,41 +111,18 @@ video{
 <video id="remoteVideo" autoplay></video>
 </div>
 
+<br>
+
 <button onclick="startChat()">Start</button>
 <button onclick="nextUser()">Next</button>
 <button onclick="endChat()">End</button>
 
-<input id="msgInput">
+<br><br>
+
+<input id="msg">
 <button onclick="sendMsg()">Send</button>
 
 <div id="chatBox"></div>
-
-</div>
-
-<!-- PREMIUM -->
-<div id="premiumUI">
-
-<h2>💎 PREMIUM</h2>
-
-<div class="card gold">
-<h3>2 HOURS</h3>
-<p>100 Coins</p>
-<button onclick="buy(100,2)">BUY</button>
-</div>
-
-<div class="card blue">
-<h3>10 HOURS</h3>
-<p>500 Coins</p>
-<button onclick="buy(500,10)">BUY</button>
-</div>
-
-<div class="card pink">
-<h3>24 HOURS</h3>
-<p>1000 Coins</p>
-<button onclick="buy(1000,24)">BUY</button>
-</div>
-
-<button onclick="closePremium()">CLOSE</button>
 
 </div>
 
