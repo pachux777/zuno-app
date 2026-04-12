@@ -1,13 +1,10 @@
 let socket, peer, localStream;
-let coins = parseInt(localStorage.getItem("coins")) || 0;
-let premiumTime = parseInt(localStorage.getItem("premiumTime")) || 0;
-let history = [];
 
+let coins = parseInt(localStorage.getItem("coins")) || 0;
 updateCoins();
 
-// LOGIN
 function login(){
-  let age = ageInput = document.getElementById("age").value;
+  let age = document.getElementById("age").value;
   if(age < 18) return alert("18+ only");
 
   loginPage.style.display="none";
@@ -30,31 +27,16 @@ function watchAd(){
   updateCoins();
 }
 
-// SHOP
-function toggleShop(){
-  shop.style.display = shop.style.display==="none"?"block":"none";
-}
+// PREMIUM UI
+function openPremium(){ premiumUI.style.display="flex"; }
+function closePremium(){ premiumUI.style.display="none"; }
 
-// BUY PREMIUM
-function buyPremium(cost,hours){
+function buy(cost,hours){
   if(coins < cost) return alert("Not enough coins");
-
   coins -= cost;
-  premiumTime += hours*3600;
-
-  localStorage.setItem("premiumTime",premiumTime);
   updateCoins();
-
-  alert("Premium activated "+hours+" hours");
+  alert("Premium "+hours+" hours activated");
 }
-
-// TIMER
-setInterval(()=>{
-  if(premiumTime>0){
-    premiumTime--;
-    localStorage.setItem("premiumTime",premiumTime);
-  }
-},1000);
 
 // CAMERA
 async function startChat(){
@@ -86,9 +68,8 @@ function setupSocket(){
   });
 
   socket.on("message",(d)=>{
-    addMessage(d.name+": "+d.text);
+    chatBox.innerHTML += "<div>"+d.name+": "+d.text+"</div>";
   });
-
 }
 
 // WEBRTC
@@ -113,34 +94,20 @@ function createPeer(){
   });
 }
 
-// MESSAGE FIXED
+// CHAT
 function sendMsg(){
   let msg = msgInput.value;
   if(!msg) return;
-
   socket.emit("message",msg);
-  addMessage("You: "+msg);
-
-  msgInput.value="";
 }
 
-function addMessage(m){
-  let d=document.createElement("div");
-  d.innerText=m;
-  chatBox.appendChild(d);
-  history.push(m);
-}
-
-// NEXT FIXED
+// NEXT
 function nextUser(){
-  if(peer){
-    peer.close();
-    peer=null;
-  }
+  if(peer) peer.close();
   socket.emit("next");
 }
 
-// END FIXED
+// END
 function endChat(){
   if(peer) peer.close();
   if(socket) socket.disconnect();
@@ -148,7 +115,3 @@ function endChat(){
     localStream.getTracks().forEach(t=>t.stop());
   }
 }
-
-// EXTRA
-function reportUser(){ alert("User reported 🚨"); }
-function showHistory(){ alert(history.join("\n") || "No history"); }
