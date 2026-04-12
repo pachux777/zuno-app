@@ -1,28 +1,14 @@
 let socket = null;
-let localStream = null;
+let stream = null;
 
-let coins = parseInt(localStorage.getItem("coins")) || 0;
-let history = [];
+let coins = parseInt(localStorage.getItem("coins")) || 100;
 
-/* LOGIN */
-function login(){
-  let age = document.getElementById("age").value;
-
-  if(age < 18) return alert("18+ only");
-
-  document.getElementById("loginPage").style.display="none";
-  document.getElementById("app").style.display="block";
-
-  socket = io();
-  setupSocket();
-
-  updateCoins();
-}
+update();
 
 /* COINS */
-function updateCoins(){
+function update(){
   document.getElementById("coins").innerText = coins;
-  localStorage.setItem("coins",coins);
+  localStorage.setItem("coins", coins);
 }
 
 /* ADS */
@@ -31,99 +17,100 @@ function watchAd(){
 
   setTimeout(()=>{
     coins += 20;
-    updateCoins();
+    update();
   },5000);
 }
 
-/* PREMIUM */
-function openPremium(){
-  document.getElementById("premiumBox").style.display="block";
-}
-function closePremium(){
-  document.getElementById("premiumBox").style.display="none";
-}
-function buy(cost){
-  if(coins < cost) return alert("Not enough coins");
+/* DEVICES */
+navigator.mediaDevices.enumerateDevices().then(devices=>{
+  devices.forEach(d=>{
+    if(d.kind==="videoinput"){
+      camera.innerHTML += `<option value="${d.deviceId}">${d.label||"Camera"}</option>`;
+    }
+    if(d.kind==="audioinput"){
+      mic.innerHTML += `<option value="${d.deviceId}">${d.label||"Mic"}</option>`;
+    }
+  });
+});
 
-  coins -= cost;
-  updateCoins();
-}
+/* START */
+async function start(){
 
-/* REPORT */
-function openReport(){
-  document.getElementById("reportBox").style.display="block";
-}
-function closeReport(){
-  document.getElementById("reportBox").style.display="none";
-}
-function reportSend(r){
-  alert("Reported: "+r);
-}
-
-/* HISTORY */
-function showHistory(){
-  alert(history.join("\n") || "No history");
-}
-
-/* CHAT */
-async function startChat(){
   if(coins < 2) return alert("Need coins");
 
   coins -= 2;
-  updateCoins();
+  update();
 
-  document.getElementById("loading").style.display="block";
+  loading.style.display="block";
 
-  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  document.getElementById("localVideo").srcObject = localStream;
+  stream = await navigator.mediaDevices.getUserMedia({
+    video:{deviceId:camera.value},
+    audio:{deviceId:mic.value}
+  });
+
+  me.srcObject = stream;
+
+  socket = io();
+
+  setup();
 
   socket.emit("start");
 }
 
-function endChat(){
-  document.getElementById("loading").style.display="none";
-
-  if(socket) socket.disconnect();
-}
-
 /* SOCKET */
-function setupSocket(){
+function setup(){
 
   socket.on("matched",()=>{
-    document.getElementById("loading").style.display="none";
-  });
-
-  socket.on("typing",()=>{
-    document.getElementById("typing").innerText="Typing...";
-    setTimeout(()=>document.getElementById("typing").innerText="",2000);
+    loading.style.display="none";
   });
 
   socket.on("message",(d)=>{
-    addMessage(d.name+": "+d.text);
+    addMsg(d.name+": "+d.text);
+  });
+
+  socket.on("typing",()=>{
+    typing.innerText="Typing...";
+    setTimeout(()=>typing.innerText="",1500);
+  });
+
+  socket.on("partner-disconnected",()=>{
+    loading.style.display="block";
   });
 }
 
-/* MESSAGE */
-function sendMsg(){
-  let input = document.getElementById("msg");
-  let msg = input.value.trim();
-
-  if(!msg) return;
-
-  socket.emit("message",msg);
-  addMessage("You: "+msg);
-
-  input.value="";
+/* NEXT */
+function next(){
+  if(socket) socket.emit("next");
 }
 
-function addMessage(text){
-  let div=document.createElement("div");
-  div.innerText=text;
-  document.getElementById("chatBox").appendChild(div);
-
-  history.push(text);
+/* END */
+function end(){
+  loading.style.display="none";
+  if(socket){
+    socket.emit("end");
+    socket.disconnect();
+  }
 }
 
-/* EXTRA */
-function typing(){ if(socket) socket.emit("typing"); }
-function nextUser(){ if(socket) socket.emit("next"); }
+/* SEND */
+function send(){
+  let m = msg.value.trim();
+  if(!m) return;
+
+  socket.emit("message", m);
+  addMsg("You: "+m);
+
+  msg.value="";
+}
+
+/* CHAT */
+function addMsg(text){
+  let d=document.createElement("div");
+  d.innerText=text;
+  chat.appendChild(d);
+}
+
+/* REPORT */
+function report(){
+  alert("User reported (simulation)");
+}
