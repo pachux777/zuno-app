@@ -8,48 +8,89 @@
 body{
   margin:0;
   font-family:Arial;
-  background:#0f2027;
+  background:linear-gradient(135deg,#000,#0f2027,#203a43);
   color:white;
 }
 
 /* LOGIN */
 #login{
-  text-align:center;
-  margin-top:100px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+}
+
+#login h1{
+  font-size:45px;
+  margin-bottom:20px;
 }
 
 input{
   padding:12px;
   width:260px;
-  margin:5px;
+  margin:8px;
   border-radius:10px;
   border:none;
+  font-size:16px;
+}
+
+button{
+  padding:10px 18px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(45deg,#00e5ff,#00bcd4);
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+  margin:5px;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+/* APP */
+#app{
+  display:none;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
 }
 
 /* TOP BAR */
 .top{
   display:flex;
   justify-content:space-between;
+  align-items:center;
   padding:10px;
   background:#111;
 }
 
+.left, .right{
+  display:flex;
+  gap:10px;
+}
+
 .coin{
   background:gold;
-  padding:5px 15px;
-  border-radius:20px;
   color:black;
+  padding:6px 18px;
+  border-radius:20px;
+  font-weight:bold;
 }
 
 /* MAIN */
 #main{
+  flex:1;
   display:flex;
-  height:80vh;
 }
 
 /* VIDEO */
 #videoSide{
-  width:60%;
+  width:65%;
+  padding:10px;
   display:flex;
   flex-direction:column;
   gap:10px;
@@ -57,33 +98,48 @@ input{
 
 video{
   width:100%;
-  height:45%;
+  height:48%;
   background:black;
-  border-radius:10px;
+  border-radius:15px;
+  object-fit:cover;
 }
 
 /* CHAT */
 #chatSide{
-  width:40%;
+  width:35%;
   display:flex;
   flex-direction:column;
+  background:#111;
 }
 
 #chat{
   flex:1;
-  overflow:auto;
-  background:#111;
   padding:10px;
+  overflow:auto;
 }
 
-button{
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:cyan;
-  margin:5px;
-  cursor:pointer;
+#msg{
+  width:80%;
 }
+
+/* BUTTON GROUP */
+.controls{
+  text-align:center;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+  #main{
+    flex-direction:column;
+  }
+  #videoSide, #chatSide{
+    width:100%;
+  }
+  video{
+    height:200px;
+  }
+}
+
 </style>
 </head>
 
@@ -92,34 +148,54 @@ button{
 <!-- LOGIN -->
 <div id="login">
 <h1>⚡ ZUNO ⚡</h1>
-<input id="name" placeholder="Name"><br>
-<input id="age" type="number" placeholder="Age"><br>
+<input id="name" placeholder="Enter Name">
+<input id="age" type="number" placeholder="Enter Age">
 <button onclick="login()">Enter</button>
+<button onclick="alert('Policy page coming')">Policy</button>
 </div>
 
 <!-- APP -->
-<div id="app" style="display:none;">
+<div id="app">
 
+<!-- TOP -->
 <div class="top">
-<button onclick="watchAd()">Ads</button>
-<div class="coin">🪙 <span id="coins">0</span></div>
-<button onclick="openReport()">Report</button>
+
+<div class="left">
+<button onclick="watchAd()">🎬 Ads</button>
+<button onclick="openPolicy()">📜 Policy</button>
 </div>
 
+<div class="coin">🪙 <span id="coins">0</span></div>
+
+<div class="right">
+<button onclick="openReport()">🚨 Report</button>
+</div>
+
+</div>
+
+<!-- MAIN -->
 <div id="main">
 
+<!-- VIDEO -->
 <div id="videoSide">
+
 <video id="me" autoplay muted></video>
 <video id="stranger" autoplay></video>
 
+<div class="controls">
 <button onclick="start()">Start</button>
 <button onclick="next()">Next (-2)</button>
 <button onclick="end()">End</button>
 </div>
 
+</div>
+
+<!-- CHAT -->
 <div id="chatSide">
+
 <div id="chat"></div>
 
+<div style="padding:10px;">
 <input id="msg">
 <button onclick="send()">Send</button>
 </div>
@@ -128,11 +204,6 @@ button{
 
 </div>
 
-<!-- REPORT -->
-<div id="reportBox" style="display:none; position:fixed; top:30%; left:40%; background:#111; padding:20px;">
-<button onclick="reportAction('Nude')">Nude</button>
-<button onclick="reportAction('Abuse')">Abuse</button>
-<button onclick="reportAction('Violence')">Violence</button>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
