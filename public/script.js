@@ -1,19 +1,35 @@
-let socket = null;
-let stream = null;
+let socket;
+let stream;
 
 let coins = parseInt(localStorage.getItem("coins")) || 100;
 
 update();
 
+/* LOGIN */
+function login(){
+  let age = document.getElementById("age").value;
+
+  if(age < 18){
+    alert("18+ only");
+    return;
+  }
+
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+
+  socket = io();
+  setup();
+}
+
 /* COINS */
 function update(){
   document.getElementById("coins").innerText = coins;
-  localStorage.setItem("coins", coins);
+  localStorage.setItem("coins",coins);
 }
 
 /* ADS */
 function watchAd(){
-  window.open("https://www.profitableratecpm.com/xxxxx","_blank");
+  window.open("https://www.profitableratecpm.com/xxxxx");
 
   setTimeout(()=>{
     coins += 20;
@@ -21,96 +37,78 @@ function watchAd(){
   },5000);
 }
 
-/* DEVICES */
-navigator.mediaDevices.enumerateDevices().then(devices=>{
-  devices.forEach(d=>{
-    if(d.kind==="videoinput"){
-      camera.innerHTML += `<option value="${d.deviceId}">${d.label||"Camera"}</option>`;
-    }
-    if(d.kind==="audioinput"){
-      mic.innerHTML += `<option value="${d.deviceId}">${d.label||"Mic"}</option>`;
-    }
-  });
-});
-
 /* START */
 async function start(){
+  stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  document.getElementById("me").srcObject = stream;
 
-  if(coins < 2) return alert("Need coins");
+  socket.emit("start");
+}
+
+/* NEXT */
+function next(){
+  if(coins < 2){
+    alert("Need coins");
+    return;
+  }
 
   coins -= 2;
   update();
 
-  loading.style.display="block";
+  socket.emit("next");
+}
 
-  stream = await navigator.mediaDevices.getUserMedia({
-    video:{deviceId:camera.value},
-    audio:{deviceId:mic.value}
-  });
+/* END */
+function end(){
+  if(stream){
+    stream.getTracks().forEach(t=>t.stop());
+  }
 
-  me.srcObject = stream;
-
-  socket = io();
-
-  setup();
-
-  socket.emit("start");
+  socket.emit("end");
 }
 
 /* SOCKET */
 function setup(){
 
   socket.on("matched",()=>{
-    loading.style.display="none";
+    console.log("Matched");
   });
 
   socket.on("message",(d)=>{
-    addMsg(d.name+": "+d.text);
-  });
-
-  socket.on("typing",()=>{
-    typing.innerText="Typing...";
-    setTimeout(()=>typing.innerText="",1500);
+    addMsg(d.name + ": " + d.text);
   });
 
   socket.on("partner-disconnected",()=>{
-    loading.style.display="block";
+    alert("Stranger left");
   });
-}
-
-/* NEXT */
-function next(){
-  if(socket) socket.emit("next");
-}
-
-/* END */
-function end(){
-  loading.style.display="none";
-  if(socket){
-    socket.emit("end");
-    socket.disconnect();
-  }
 }
 
 /* SEND */
 function send(){
-  let m = msg.value.trim();
-  if(!m) return;
+  let msg = document.getElementById("msg");
+  let text = msg.value.trim();
 
-  socket.emit("message", m);
-  addMsg("You: "+m);
+  if(!text) return;
+
+  socket.emit("message",text);
+  addMsg("You: " + text);
 
   msg.value="";
 }
 
 /* CHAT */
 function addMsg(text){
-  let d=document.createElement("div");
-  d.innerText=text;
-  chat.appendChild(d);
+  let div = document.createElement("div");
+  div.innerText = text;
+  document.getElementById("chat").appendChild(div);
 }
 
 /* REPORT */
-function report(){
-  alert("User reported (simulation)");
+function openReport(){
+  document.getElementById("reportBox").style.display="block";
+}
+
+function reportAction(reason){
+  alert("Reported: " + reason);
+  document.getElementById("reportBox").style.display="none";
 }
