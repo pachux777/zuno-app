@@ -7,10 +7,15 @@
 <style>
 body{
   margin:0;
+  font-family:Arial;
   background:linear-gradient(135deg,#000,#0f2027,#203a43);
   color:white;
   text-align:center;
-  font-family:Arial;
+}
+
+/* LOGIN */
+#login{
+  margin-top:120px;
 }
 
 /* TOP */
@@ -24,17 +29,8 @@ body{
 .coin{
   background:gold;
   color:black;
-  padding:6px 15px;
+  padding:5px 15px;
   border-radius:20px;
-}
-
-button{
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:cyan;
-  margin:4px;
-  cursor:pointer;
 }
 
 /* VIDEO */
@@ -51,12 +47,25 @@ video{
   border-radius:10px;
 }
 
-/* AD BOX */
-#adBox{
+/* BUTTON */
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:cyan;
+  margin:5px;
+  cursor:pointer;
+}
+
+/* POPUP */
+.popup{
   display:none;
+  position:fixed;
+  top:30%;
+  left:50%;
+  transform:translate(-50%,-50%);
   background:#111;
-  padding:15px;
-  margin:10px;
+  padding:20px;
   border-radius:10px;
 }
 
@@ -65,25 +74,29 @@ video{
 
 <body>
 
+<!-- LOGIN -->
+<div id="login">
+<h2>ZUNO</h2>
+<input id="name" placeholder="Name"><br>
+<input id="age" type="number" placeholder="Age"><br>
+<button onclick="login()">Enter</button>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
 <div class="top">
 <div>
-<button onclick="openAd()">🎬 Ads</button>
+<button onclick="watchAd()">🎬 Ads</button>
 <button onclick="openPremium()">💎</button>
 </div>
 
 <div class="coin">🪙 <span id="coins">0</span></div>
 
 <div>
-<button onclick="showHistory()">🕘</button>
-<button onclick="report()">🚨</button>
+<button onclick="openHistory()">🕘</button>
+<button onclick="openReport()">🚨</button>
 </div>
-</div>
-
-<!-- AD WAIT -->
-<div id="adBox">
-<h3>⏳ Watch Ad...</h3>
-<p id="timer">8</p>
-<button id="claimBtn" disabled onclick="claimReward()">Claim +20</button>
 </div>
 
 <div id="videos">
@@ -100,7 +113,28 @@ video{
 
 <div id="chat"></div>
 
+</div>
+
+<!-- PREMIUM -->
+<div id="premium" class="popup">
+<h3>Premium</h3>
+<button onclick="buy(200)">Platinum (2h)</button>
+<button onclick="buy(500)">Gold (10h)</button>
+<button onclick="buy(1000)">Diamond (24h)</button>
+<button onclick="closePremium()">Close</button>
+</div>
+
+<!-- REPORT -->
+<div id="report" class="popup">
+<h3>Report User</h3>
+<button onclick="submitReport('Nude')">Nude</button>
+<button onclick="submitReport('Violence')">Violence</button>
+<button onclick="submitReport('Abuse')">Abuse</button>
+<button onclick="closeReport()">Close</button>
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
+
 </body>
 </html>
