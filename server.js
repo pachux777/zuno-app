@@ -1,67 +1,145 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
+let socket;
+let peer;
+let localStream;
+let history=[];
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+// LOGIN
+function login(){
+  let name=username.value;
+  let age=document.getElementById("age").value;
 
-app.use(express.static("public"));
+  if(age<18) return alert("18+ only");
 
-let waitingUsers = [];
+  loginPage.style.display="none";
+  app.style.display="block";
 
-function match(socket){
-  for(let i=0;i<waitingUsers.length;i++){
-    let user = waitingUsers[i];
-    if(user !== socket){
-      waitingUsers.splice(i,1);
+  socket=io();
+  socket.emit("set-name",name);
 
-      socket.partner = user;
-      user.partner = socket;
-
-      socket.emit("matched");
-      user.emit("matched");
-      return;
-    }
-  }
-  waitingUsers.push(socket);
+  setupSocket();
 }
 
-io.on("connection",(socket)=>{
+// CAMERA
+async function startCamera(){
+  localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  localVideo.srcObject=localStream;
+}
 
-  socket.on("set-name",(name)=> socket.name = name);
+// START
+function startChat(){
+  startCamera();
+  socket.emit("start");
+  status.innerText="Searching...";
+}
 
-  socket.on("start",()=> match(socket));
+// SOCKET
+function setupSocket(){
 
-  socket.on("signal",(data)=>{
-    if(socket.partner){
-      socket.partner.emit("signal",data);
+  socket.on("matched",()=>{
+    status.innerText="Connected";
+    createPeer();
+  });
+
+  socket.on("signal",async(data)=>{
+    if(!peer) createPeer();
+
+    if(data.sdp){
+      await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
+      if(data.sdp.type==="offer"){
+        let ans=await peer.createAnswer();
+        await peer.setLocalDescription(ans);
+        socket.emit("signal",{sdp:peer.localDescription});
+      }
+    }
+
+    if(data.candidate){
+      await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
     }
   });
 
-  socket.on("message",(msg)=>{
-    if(socket.partner){
-      socket.partner.emit("message",{name:socket.name,text:msg});
-    }
+  socket.on("message",(data)=>{
+    addMessage(data.name+": "+data.text);
   });
 
-  socket.on("next",()=>{
-    if(socket.partner){
-      socket.partner.emit("partner-disconnected");
-      socket.partner.partner=null;
-    }
-    socket.partner=null;
-    match(socket);
+  socket.on("partner-disconnected",()=>{
+    if(peer) peer.close();
+    remoteVideo.srcObject=null;
+  });
+}
+
+// WEBRTC
+function createPeer(){
+  peer=new RTCPeerConnection({
+    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
   });
 
-  socket.on("disconnect",()=>{
-    if(socket.partner){
-      socket.partner.emit("partner-disconnected");
-      socket.partner.partner=null;
+  localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
+
+  peer.ontrack=e=>remoteVideo.srcObject=e.streams[0];
+
+  peer.onicecandidate=e=>{
+    if(e.candidate){
+      socket.emit("signal",{candidate:e.candidate});
     }
-    waitingUsers = waitingUsers.filter(u=>u!==socket);
+  };
+
+  peer.createOffer().then(o=>{
+    peer.setLocalDescription(o);
+    socket.emit("signal",{sdp:o});
   });
+}
 
-});
+// MESSAGE FIXED
+function sendMsg(){
+  if(!socket) return;
 
-server.listen(10000,()=>console.log("Server running"));
+  let msg=msgInput.value;
+  if(!msg) return;
+
+  socket.emit("message",msg);
+  addMessage("You: "+msg);
+
+  msgInput.value="";
+}
+
+// ADD MESSAGE
+function addMessage(msg){
+  let d=document.createElement("div");
+  d.innerText=msg;
+  chatBox.appendChild(d);
+  history.push(msg);
+}
+
+// NEXT FIXED
+function nextUser(){
+  if(peer){
+    peer.close();
+    peer=null;
+  }
+  socket.emit("next");
+}
+
+// END FIXED
+function endChat(){
+  if(peer){
+    peer.close();
+    peer=null;
+  }
+  if(socket){
+    socket.disconnect();
+    socket=null;
+  }
+  if(localStream){
+    localStream.getTracks().forEach(t=>t.stop());
+  }
+
+  localVideo.srcObject=null;
+  remoteVideo.srcObject=null;
+
+  status.innerText="Ended";
+}
+
+// EXTRA
+function coins(){ alert("Coins coming soon 💰"); }
+function reportUser(){ alert("User reported 🚨"); }
+function showHistory(){ alert(history.join("\n")||"No history"); }
