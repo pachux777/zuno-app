@@ -1,110 +1,56 @@
-let socket, peer, localStream;
-let coins = parseInt(localStorage.getItem("coins")) || 0;
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
-updateCoins();
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-function login(){
-  let name = document.getElementById("name").value;
-  let age = document.getElementById("age").value;
+app.use(express.static("public"));
 
-  if(!name || !age) return alert("Enter all details");
-  if(age < 18) return alert("18+ only");
+let waitingUsers = [];
 
-  loginPage.style.display="none";
-  app.style.display="block";
-
-  socket = io();
-  setupSocket();
-}
-
-// COINS
-function updateCoins(){
-  document.getElementById("coins").innerText = coins;
-  localStorage.setItem("coins",coins);
-}
-
-function watchAd(){
-  alert("Ad watched +20 coins");
-  coins += 20;
-  updateCoins();
-}
-
-// CAMERA
-async function startChat(){
-  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  localVideo.srcObject = localStream;
-  socket.emit("start");
-}
-
-// SOCKET
-function setupSocket(){
-
-  socket.on("matched",()=>createPeer());
-
-  socket.on("signal",async(data)=>{
-    if(!peer) createPeer();
-
-    if(data.sdp){
-      await peer.setRemoteDescription(new RTCSessionDescription(data.sdp));
-
-      if(data.sdp.type==="offer"){
-        let ans = await peer.createAnswer();
-        await peer.setLocalDescription(ans);
-        socket.emit("signal",{sdp:peer.localDescription});
-      }
+function match(socket){
+  for(let i=0;i<waitingUsers.length;i++){
+    let user = waitingUsers[i];
+    if(user !== socket){
+      waitingUsers.splice(i,1);
+      socket.partner = user;
+      user.partner = socket;
+      socket.emit("matched");
+      user.emit("matched");
+      return;
     }
-
-    if(data.candidate){
-      await peer.addIceCandidate(new RTCIceCandidate(data.candidate));
-    }
-  });
-
-  socket.on("message",(d)=>{
-    chatBox.innerHTML += "<div>"+d.name+": "+d.text+"</div>";
-  });
-}
-
-// WEBRTC
-function createPeer(){
-  peer = new RTCPeerConnection({
-    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
-  });
-
-  localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
-
-  peer.ontrack=e=>remoteVideo.srcObject=e.streams[0];
-
-  peer.onicecandidate=e=>{
-    if(e.candidate){
-      socket.emit("signal",{candidate:e.candidate});
-    }
-  };
-
-  peer.createOffer().then(o=>{
-    peer.setLocalDescription(o);
-    socket.emit("signal",{sdp:o});
-  });
-}
-
-// CHAT
-function sendMsg(){
-  let msg = document.getElementById("msg").value;
-  if(!msg) return;
-
-  socket.emit("message",msg);
-}
-
-// NEXT
-function nextUser(){
-  if(peer) peer.close();
-  socket.emit("next");
-}
-
-// END
-function endChat(){
-  if(peer) peer.close();
-  if(socket) socket.disconnect();
-  if(localStream){
-    localStream.getTracks().forEach(t=>t.stop());
   }
+  waitingUsers.push(socket);
 }
+
+io.on("connection",(socket)=>{
+
+  socket.on("start",()=>match(socket));
+
+  socket.on("signal",(data)=>{
+    if(socket.partner){
+      socket.partner.emit("signal",data);
+    }
+  });
+
+  socket.on("message",(msg)=>{
+    if(socket.partner){
+      socket.partner.emit("message",{name:"Stranger",text:msg});
+    }
+  });
+
+  socket.on("next",()=>{
+    if(socket.partner){
+      socket.partner.emit("partner-disconnected");
+      socket.partner.partner=null;
+    }
+    socket.partner=null;
+    match(socket);
+  });
+
+});
+
+const PORT = process.env.PORT || 10000;
+server.listen(PORT,()=>console.log("Server running"));
