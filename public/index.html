@@ -1,194 +1,128 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ZUNO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zuno</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      color: white;
-    }
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  color:white;
+  text-align:center;
+  background:linear-gradient(135deg,#000,#0f2027,#203a43);
+}
 
-    /* LOGIN */
-    #login {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+/* LOGIN */
+#loginPage{
+  margin-top:120px;
+}
 
-    input {
-      padding: 10px;
-      margin: 8px;
-      border-radius: 8px;
-      border: none;
-      width: 200px;
-    }
+input{
+  padding:10px;
+  margin:10px;
+  border-radius:10px;
+  border:none;
+  width:200px;
+}
 
-    button {
-      padding: 10px;
-      border: none;
-      border-radius: 10px;
-      background: cyan;
-      font-weight: bold;
-      cursor: pointer;
-    }
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:cyan;
+  margin:5px;
+  cursor:pointer;
+}
 
-    /* APP */
-    #app {
-      display: none;
-    }
+/* TOPBAR */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  background:#111;
+}
 
-    #topBar {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      background: rgba(0,0,0,0.6);
-    }
+.coin{
+  background:gold;
+  color:black;
+  padding:5px 15px;
+  border-radius:20px;
+}
 
-    .coinBox {
-      background: gold;
-      color: black;
-      padding: 5px 12px;
-      border-radius: 10px;
-      font-weight: bold;
-    }
+/* VIDEO */
+#videoBox{
+  display:flex;
+  justify-content:center;
+  gap:15px;
+}
 
-    /* VIDEO */
-    #videoContainer {
-      width: 90%;
-      height: 55vh;
-      margin: 10px auto;
-      background: black;
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-    }
+video{
+  width:420px;
+  height:280px;
+  border-radius:10px;
+  background:black;
+}
 
-    #remoteVideo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+/* LOADING */
+#loading{
+  display:none;
+  font-size:18px;
+  margin:10px;
+}
 
-    #localVideo {
-      position: absolute;
-      width: 110px;
-      height: 150px;
-      bottom: 10px;
-      right: 10px;
-      border: 2px solid white;
-      border-radius: 10px;
-    }
-
-    /* CONTROLS */
-    #controls {
-      display: flex;
-      justify-content: space-around;
-      padding: 10px;
-    }
-
-  </style>
+/* MOBILE */
+@media(max-width:768px){
+  video{width:48%;height:300px;}
+}
+</style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-  <h2>🔥 Welcome to ZUNO</h2>
-  <input id="name" placeholder="Enter Name">
-  <input id="age" type="number" placeholder="Enter Age">
-  <button onclick="login()">Enter</button>
+<div id="loginPage">
+<h1>⚡ ZUNO ⚡</h1>
+<input id="name" placeholder="Name"><br>
+<input id="age" type="number" placeholder="Age"><br>
+<button onclick="login()">Enter</button>
 </div>
 
-<!-- APP -->
-<div id="app">
+<div id="app" style="display:none;">
 
-  <div id="topBar">
-    <div class="coinBox">🪙 <span id="coins">50</span></div>
-    <button onclick="watchAd()">🎁 Watch Ad</button>
-  </div>
+<div class="topbar">
+<div>
+<button onclick="watchAd()">🎬 Ads</button>
+<button onclick="openPremium()">💎</button>
+</div>
 
-  <div id="videoContainer">
-    <video id="remoteVideo" autoplay></video>
-    <video id="localVideo" autoplay muted></video>
-  </div>
+<div class="coin">🪙 <span id="coins">0</span></div>
 
-  <div id="controls">
-    <button onclick="startChat()">Start</button>
-    <button onclick="nextChat()">Next</button>
-    <button onclick="endChat()">End</button>
-  </div>
+<div>
+<button onclick="showHistory()">🕘</button>
+<button onclick="reportUser()">🚨</button>
+</div>
+</div>
+
+<div id="loading">🔄 Finding your mate...</div>
+
+<div id="videoBox">
+<video id="localVideo" autoplay muted></video>
+<video id="remoteVideo" autoplay></video>
+</div>
+
+<button onclick="startChat()">Start</button>
+<button onclick="nextUser()">Next</button>
+<button onclick="endChat()">End</button>
+
+<input id="msg" oninput="typing()">
+<button onclick="sendMsg()">Send</button>
+
+<div id="typing"></div>
+<div id="chatBox"></div>
 
 </div>
 
-<script>
-let coins = 50;
-let adRunning = false;
-
-function login() {
-  let name = document.getElementById("name").value;
-  let age = document.getElementById("age").value;
-
-  if (!name || !age) {
-    alert("Enter name and age");
-    return;
-  }
-
-  document.getElementById("login").style.display = "none";
-  document.getElementById("app").style.display = "block";
-}
-
-function updateCoins() {
-  document.getElementById("coins").innerText = coins;
-}
-
-function watchAd() {
-  if (adRunning) return;
-
-  adRunning = true;
-  alert("Watching ad...");
-
-  setTimeout(() => {
-    coins += 10;
-    updateCoins();
-    alert("Ad finished +10 coins");
-    adRunning = false;
-  }, 4000);
-}
-
-function startChat() {
-  if (coins < 5) {
-    alert("Not enough coins");
-    return;
-  }
-
-  coins -= 5;
-  updateCoins();
-  alert("Chat started (connect WebRTC here)");
-}
-
-function nextChat() {
-  alert("Next user");
-}
-
-function endChat() {
-  alert("Chat ended");
-}
-
-/* CAMERA (so video not black) */
-navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-.then(stream => {
-  document.getElementById("localVideo").srcObject = stream;
-})
-.catch(err => {
-  console.log("Camera error:", err);
-});
-</script>
-
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
