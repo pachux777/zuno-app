@@ -1,46 +1,49 @@
 let socket, peer, stream;
 
 let coins = +localStorage.getItem("coins") || 100;
-let premium = +localStorage.getItem("premium") || 0;
+let history = [];
 
-const AD_LINK = "https://www.profitableratecpm.com/xxxxx"; // replace
+const AD_LINK = "https://www.profitableratecpm.com/xxxxx"; // your link
 
 update();
 
 /* UI */
 function update(){
-  document.getElementById("coins").innerText = coins;
+  coinsEl.innerText = coins;
   localStorage.setItem("coins",coins);
 }
 
-/* ADS FIX (IMPORTANT) */
-function watchAd(){
-  let w = window.open(AD_LINK,"_blank");
+/* ===== REALISTIC ADS SYSTEM ===== */
 
-  // give reward after delay
-  setTimeout(()=>{
-    coins += 20;
-    update();
-    alert("+20 coins");
-  },5000);
+let timerInterval;
+
+function openAd(){
+  window.open(AD_LINK,"_blank");
+
+  adBox.style.display="block";
+  let time = 8;
+  timer.innerText = time;
+  claimBtn.disabled = true;
+
+  timerInterval = setInterval(()=>{
+    time--;
+    timer.innerText = time;
+
+    if(time <= 0){
+      clearInterval(timerInterval);
+      claimBtn.disabled = false;
+    }
+  },1000);
 }
 
-/* PREMIUM */
-function openPremium(){
-  document.getElementById("premiumBox").style.display="block";
-}
-
-function closePremium(){
-  document.getElementById("premiumBox").style.display="none";
-}
-
-function buy(cost,time){
-  if(coins < cost) return alert("Not enough coins");
-
-  coins -= cost;
-  premium += time;
+function claimReward(){
+  coins += 20;
   update();
+
+  adBox.style.display="none";
 }
+
+/* =============================== */
 
 /* CHAT */
 async function start(){
@@ -48,8 +51,6 @@ async function start(){
 
   coins -= 2;
   update();
-
-  loading.style.display="block";
 
   stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
   me.srcObject = stream;
@@ -61,7 +62,6 @@ async function start(){
 }
 
 function end(){
-  loading.style.display="none";
   if(peer) peer.close();
   if(socket) socket.disconnect();
 }
@@ -69,10 +69,7 @@ function end(){
 /* SOCKET */
 function setup(){
 
-  socket.on("matched",()=>{
-    loading.style.display="none";
-    peerCreate();
-  });
+  socket.on("matched",()=>peerCreate());
 
   socket.on("message",(d)=>{
     chat.innerHTML += "<div>"+d.name+": "+d.text+"</div>";
@@ -84,7 +81,7 @@ function setup(){
     if(d.sdp){
       await peer.setRemoteDescription(d.sdp);
 
-      if(d.sdp.type=="offer"){
+      if(d.sdp.type==="offer"){
         let a = await peer.createAnswer();
         await peer.setLocalDescription(a);
         socket.emit("signal",{sdp:peer.localDescription});
@@ -95,7 +92,6 @@ function setup(){
       await peer.addIceCandidate(d.candidate);
     }
   });
-
 }
 
 /* WEBRTC */
@@ -132,5 +128,6 @@ function send(){
 
 /* EXTRA */
 function next(){ if(peer) peer.close(); socket.emit("next"); }
-function historyShow(){ alert(chat.innerText); }
+function showHistory(){ alert(chat.innerText); }
 function report(){ alert("Reported"); }
+function openPremium(){ alert("Premium coming soon"); }
