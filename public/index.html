@@ -1,58 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Zuno 🔥</title>
+  <title>Zuno</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
-      background: #0a0a0a;
-      color: white;
-      font-family: Arial;
-      text-align: center;
+      background:#0a0a0a;
+      color:white;
+      font-family:Arial;
+      text-align:center;
     }
 
-    h1 { color: cyan; }
+    h1 { color:cyan; }
 
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
+    .topbar {
+      display:flex;
+      justify-content:space-between;
+      padding:10px;
     }
 
-    .left-buttons {
-      display: flex;
-      gap: 5px;
+    .left {
+      display:flex;
+      gap:5px;
     }
 
     video {
-      width: 45%;
-      border-radius: 15px;
-      background: black;
-    }
-
-    .video-label {
-      margin-bottom: 5px;
-      font-weight: bold;
+      width:45%;
+      border-radius:15px;
+      background:black;
     }
 
     button {
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      background: linear-gradient(45deg, cyan, blue);
-      color: white;
+      padding:10px;
+      border-radius:10px;
+      border:none;
+      background:linear-gradient(45deg,cyan,blue);
+      color:white;
+    }
+
+    input {
+      padding:10px;
+      margin:5px;
+      border-radius:8px;
+      border:none;
     }
 
     #chatBox {
-      height: 120px;
-      overflow-y: auto;
-      border: 1px solid gray;
-      margin-top: 10px;
+      height:120px;
+      overflow:auto;
+      border:1px solid gray;
+      margin-top:10px;
     }
 
     .big video {
-      width: 90% !important;
+      width:90% !important;
     }
   </style>
 </head>
@@ -61,40 +63,38 @@
 
 <!-- LOGIN -->
 <div id="loginPage">
-  <h2>Zuno 🔥</h2>
-  <input id="username" placeholder="Name"><br>
-  <input id="age" type="number" placeholder="Age"><br><br>
+  <h1>ZUNO</h1>
+  <input id="username" placeholder="Enter name"><br>
+  <input id="age" type="number" placeholder="Enter age"><br><br>
   <button onclick="login()">Enter</button>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none;">
 
-<div class="top-bar">
-  <div class="left-buttons">
+<div class="topbar">
+  <div class="left">
     <button onclick="coins()">🪙</button>
-    <button onclick="toggleTheater()">🎬</button>
+    <button onclick="toggleTheatre()">🎬</button>
     <button onclick="showHistory()">😊</button>
   </div>
 
-  <button onclick="reportUser()">🚫 Report</button>
+  <button onclick="reportUser()">🚨</button>
 </div>
 
-<h1>Zuno ⚡</h1>
+<h1>ZUNO</h1>
 <h3 id="status">Ready</h3>
 
 <div id="videoBox">
-
   <div>
-    <div class="video-label">YOU</div>
+    <h4>YOU</h4>
     <video id="localVideo" autoplay muted></video>
   </div>
 
   <div>
-    <div class="video-label">STRANGER</div>
+    <h4>STRANGER</h4>
     <video id="remoteVideo" autoplay></video>
   </div>
-
 </div>
 
 <br>
@@ -112,36 +112,38 @@
 
 </div>
 
+<!-- ADS -->
+<script src="https://pl29131156.profitablecpmratenetwork.com/8d/99/98/8d99989f643f0ceb74dababf43137ed4.js"></script>
+
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
 let socket;
 let peer;
 let localStream;
-let history = [];
+let history=[];
 
 // LOGIN
-function login() {
-  let name = username.value;
-  let age = ageInput = document.getElementById("age").value;
+function login(){
+  let name=username.value;
+  let age=document.getElementById("age").value;
 
-  if (!name || !age) return alert("Fill all");
+  if(!name || !age) return alert("Fill all");
+  if(age<18) return alert("18+ only");
 
-  if (age < 18) return alert("18+ only");
+  loginPage.style.display="none";
+  app.style.display="block";
 
-  loginPage.style.display = "none";
-  app.style.display = "block";
-
-  socket = io();
-  socket.emit("set-name", name);
+  socket=io();
+  socket.emit("set-name",name);
 
   setupSocket();
 }
 
 // CAMERA
-async function startCamera() {
-  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  localVideo.srcObject = localStream;
+async function startCamera(){
+  localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  localVideo.srcObject=localStream;
 }
 
 // START
@@ -154,12 +156,12 @@ function startChat(){
 // SOCKET
 function setupSocket(){
 
-  socket.on("matched", ()=>{
+  socket.on("matched",()=>{
     status.innerText="Connected 🔥";
     createPeer();
   });
 
-  socket.on("signal", async(data)=>{
+  socket.on("signal",async(data)=>{
     if(!peer) createPeer();
 
     if(data.sdp){
@@ -180,7 +182,7 @@ function setupSocket(){
     addMessage(data.name+": "+data.text);
   });
 
-  socket.on("partner-disconnected", ()=>{
+  socket.on("partner-disconnected",()=>{
     status.innerText="Searching...";
     if(peer) peer.close();
     remoteVideo.srcObject=null;
@@ -207,7 +209,7 @@ function createPeer(){
   });
 }
 
-// MESSAGE
+// CHAT
 function sendMsg(){
   let msg=msgInput.value;
   socket.emit("message",msg);
@@ -215,7 +217,7 @@ function sendMsg(){
   msgInput.value="";
 }
 
-// ADD MESSAGE + SAVE HISTORY
+// ADD MESSAGE
 function addMessage(msg){
   let d=document.createElement("div");
   d.innerText=msg;
@@ -223,23 +225,23 @@ function addMessage(msg){
   history.push(msg);
 }
 
-// HISTORY BUTTON
+// HISTORY
 function showHistory(){
-  alert(history.join("\n") || "No history");
+  alert(history.join("\n")||"No history");
 }
 
 // COINS
 function coins(){
-  alert("Ads + coins coming soon");
+  alert("Ads running — coins coming soon");
 }
 
 // REPORT
 function reportUser(){
-  alert("User reported");
+  alert("User reported 🚨");
 }
 
-// THEATER
-function toggleTheater(){
+// THEATRE
+function toggleTheatre(){
   videoBox.classList.toggle("big");
 }
 
@@ -249,18 +251,10 @@ function nextUser(){
   socket.emit("next");
 }
 
-// FIXED END BUTTON
+// END FIXED
 function endChat(){
-  if(peer){
-    peer.close();
-    peer=null;
-  }
-
-  if(socket){
-    socket.disconnect();
-    socket=null;
-  }
-
+  if(peer){ peer.close(); peer=null; }
+  if(socket){ socket.disconnect(); socket=null; }
   remoteVideo.srcObject=null;
   status.innerText="Ended";
 }
