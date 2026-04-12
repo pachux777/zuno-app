@@ -12,18 +12,14 @@ body{
   color:white;
 }
 
-/* LOGIN */
+/* ===== LOGIN ===== */
 #login{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  height:100vh;
+  text-align:center;
+  margin-top:120px;
 }
 
 #login h1{
-  font-size:45px;
-  margin-bottom:20px;
+  font-size:40px;
 }
 
 input{
@@ -32,34 +28,9 @@ input{
   margin:8px;
   border-radius:10px;
   border:none;
-  font-size:16px;
 }
 
-button{
-  padding:10px 18px;
-  border:none;
-  border-radius:12px;
-  background:linear-gradient(45deg,#00e5ff,#00bcd4);
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-  margin:5px;
-  transition:0.2s;
-}
-
-button:hover{
-  transform:scale(1.05);
-}
-
-/* APP */
-#app{
-  display:none;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-
-/* TOP BAR */
+/* ===== TOP BAR ===== */
 .top{
   display:flex;
   justify-content:space-between;
@@ -81,32 +52,47 @@ button:hover{
   font-weight:bold;
 }
 
-/* MAIN */
+/* ===== MAIN ===== */
+#app{
+  display:none;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
 #main{
   flex:1;
   display:flex;
 }
 
-/* VIDEO */
+/* ===== VIDEO SIDE ===== */
 #videoSide{
-  width:65%;
-  padding:10px;
+  width:60%;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  align-items:center;
+  justify-content:center;
+  gap:15px;
 }
 
-video{
-  width:100%;
-  height:48%;
+/* 🔥 SQUARE CAMERA FIX */
+.videoBox{
+  width:300px;
+  height:300px;
   background:black;
   border-radius:15px;
+  overflow:hidden;
+}
+
+.videoBox video{
+  width:100%;
+  height:100%;
   object-fit:cover;
 }
 
-/* CHAT */
+/* ===== CHAT SIDE ===== */
 #chatSide{
-  width:35%;
+  width:40%;
   display:flex;
   flex-direction:column;
   background:#111;
@@ -118,16 +104,36 @@ video{
   overflow:auto;
 }
 
-#msg{
-  width:80%;
+/* ===== BUTTON ===== */
+button{
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  background:cyan;
+  cursor:pointer;
 }
 
-/* BUTTON GROUP */
+button:hover{
+  opacity:0.8;
+}
+
 .controls{
   text-align:center;
 }
 
-/* MOBILE */
+/* ===== POPUP ===== */
+.popup{
+  display:none;
+  position:fixed;
+  top:30%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#111;
+  padding:20px;
+  border-radius:10px;
+}
+
+/* ===== MOBILE ===== */
 @media(max-width:768px){
   #main{
     flex-direction:column;
@@ -135,11 +141,7 @@ video{
   #videoSide, #chatSide{
     width:100%;
   }
-  video{
-    height:200px;
-  }
 }
-
 </style>
 </head>
 
@@ -148,10 +150,10 @@ video{
 <!-- LOGIN -->
 <div id="login">
 <h1>⚡ ZUNO ⚡</h1>
-<input id="name" placeholder="Enter Name">
-<input id="age" type="number" placeholder="Enter Age">
-<button onclick="login()">Enter</button>
-<button onclick="alert('Policy page coming')">Policy</button>
+<input id="name" placeholder="Enter Name"><br>
+<input id="age" type="number" placeholder="Enter Age"><br>
+<button onclick="login()">Enter</button><br>
+<button onclick="openPolicy()">Policy</button>
 </div>
 
 <!-- APP -->
@@ -176,11 +178,16 @@ video{
 <!-- MAIN -->
 <div id="main">
 
-<!-- VIDEO -->
+<!-- LEFT VIDEO -->
 <div id="videoSide">
 
+<div class="videoBox">
 <video id="me" autoplay muted></video>
+</div>
+
+<div class="videoBox">
 <video id="stranger" autoplay></video>
+</div>
 
 <div class="controls">
 <button onclick="start()">Start</button>
@@ -190,7 +197,7 @@ video{
 
 </div>
 
-<!-- CHAT -->
+<!-- RIGHT CHAT -->
 <div id="chatSide">
 
 <div id="chat"></div>
@@ -204,6 +211,25 @@ video{
 
 </div>
 
+</div>
+
+<!-- REPORT -->
+<div id="reportBox" class="popup">
+<h3>Report User</h3>
+<button onclick="reportAction('Nude')">Nude</button>
+<button onclick="reportAction('Abuse')">Abuse</button>
+<button onclick="reportAction('Violence')">Violence</button>
+<button onclick="closeReport()">Close</button>
+</div>
+
+<!-- POLICY -->
+<div id="policyBox" class="popup">
+<h3>Policy</h3>
+<p>18+ only</p>
+<p>No nudity</p>
+<p>No abuse</p>
+<p>No violence</p>
+<button onclick="closePolicy()">Close</button>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
