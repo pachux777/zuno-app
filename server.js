@@ -6,13 +6,11 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// serve frontend
 app.use(express.static("public"));
 
 let waitingUsers = [];
 
-// match users
-function matchUser(socket){
+function match(socket){
   if(waitingUsers.length > 0){
     const partner = waitingUsers.shift();
 
@@ -26,52 +24,38 @@ function matchUser(socket){
   }
 }
 
-// socket events
-io.on("connection", (socket) => {
+io.on("connection",(socket)=>{
 
-  socket.on("start", () => {
-    matchUser(socket);
-  });
+  socket.on("start",()=>match(socket));
 
-  socket.on("signal", (data) => {
+  socket.on("signal",(data)=>{
     if(socket.partner){
-      socket.partner.emit("signal", data);
+      socket.partner.emit("signal",data);
     }
   });
 
-  socket.on("message", (msg) => {
+  socket.on("message",(msg)=>{
     if(socket.partner){
-      socket.partner.emit("message", {
-        name: "Stranger",
-        text: msg
-      });
+      socket.partner.emit("message",{name:"Stranger",text:msg});
     }
   });
 
-  socket.on("typing", () => {
+  socket.on("typing",()=>{
     if(socket.partner){
       socket.partner.emit("typing");
     }
   });
 
-  socket.on("next", () => {
+  socket.on("next",()=>{
     if(socket.partner){
       socket.partner.emit("partner-disconnected");
-      socket.partner.partner = null;
+      socket.partner.partner=null;
     }
-    socket.partner = null;
-    matchUser(socket);
-  });
-
-  socket.on("disconnect", () => {
-    waitingUsers = waitingUsers.filter(u => u !== socket);
+    socket.partner=null;
+    match(socket);
   });
 
 });
 
-// IMPORTANT PORT FIX
 const PORT = process.env.PORT || 10000;
-
-server.listen(PORT, "0.0.0.0", () => {
-  console.log("Server running on port " + PORT);
-});
+server.listen(PORT,"0.0.0.0",()=>console.log("Server running"));
