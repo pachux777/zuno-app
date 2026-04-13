@@ -10,13 +10,11 @@ body{
   font-family:Arial;
   background:linear-gradient(135deg,#000,#0f2027,#203a43);
   color:white;
+  overflow:hidden; /* 🔥 no scroll */
 }
 
 /* LOGIN */
-#login{
-  text-align:center;
-  margin-top:100px;
-}
+#login{text-align:center;margin-top:100px;}
 
 input{
   padding:12px;
@@ -91,7 +89,7 @@ video{
 }
 
 #statusText{padding:10px;color:yellow;}
-#chat{flex:1;padding:10px;}
+#chat{flex:1;padding:10px;overflow:auto;}
 
 .chatInput{display:flex;padding:10px;}
 
@@ -103,16 +101,26 @@ button{
   margin:5px;
 }
 
-/* MODAL */
+/* 🔥 MODALS */
 .modal{
   display:none;
   position:fixed;
-  top:30%;
+  top:50%;
   left:50%;
   transform:translate(-50%,-50%);
   background:#222;
   padding:20px;
-  border-radius:10px;
+  border-radius:15px;
+  z-index:100;
+  text-align:center;
+}
+
+.close{
+  position:absolute;
+  top:5px;
+  right:10px;
+  cursor:pointer;
+  color:red;
 }
 </style>
 </head>
@@ -130,8 +138,33 @@ button{
 
 <!-- TERMS -->
 <div id="termsModal" class="modal">
+<span class="close" onclick="closeTerms()">❌</span>
 <p>18+ only. No abuse or nudity.</p>
-<button onclick="closeTerms()">Close</button>
+</div>
+
+<!-- PREMIUM -->
+<div id="premiumModal" class="modal">
+<span class="close" onclick="closePremium()">❌</span>
+<h3>Premium</h3>
+<button onclick="buy(200,2)">Platinum (2h)</button><br>
+<button onclick="buy(500,10)">Gold (10h)</button><br>
+<button onclick="buy(1000,24)">Diamond (24h)</button>
+</div>
+
+<!-- REPORT -->
+<div id="reportModal" class="modal">
+<span class="close" onclick="closeReport()">❌</span>
+<h3>Report</h3>
+<button onclick="report('Abuse')">Abuse</button><br>
+<button onclick="report('Violence')">Violence</button><br>
+<button onclick="report('Nude')">Nude</button>
+</div>
+
+<!-- HISTORY -->
+<div id="historyModal" class="modal">
+<span class="close" onclick="closeHistory()">❌</span>
+<h3>Chat History</h3>
+<div id="historyBox"></div>
 </div>
 
 <!-- APP -->
@@ -143,7 +176,7 @@ button{
 <div>
 <button onclick="openPremium()">Premium</button>
 <button onclick="openReport()">Report</button>
-<button onclick="loadHistory()">History</button>
+<button onclick="openHistory()">History</button>
 </div>
 </div>
 
@@ -154,7 +187,6 @@ button{
 <div class="videoBox">
 <video id="me" autoplay muted playsinline></video>
 
-<!-- CAMERA CONTROL -->
 <div id="deviceUI" class="deviceUI">
 <button onclick="flipCamera()">Flip Camera</button><br>
 <select id="cameraSelect"></select><br>
@@ -194,27 +226,14 @@ button{
 let stream;
 let socket;
 let facing="user";
+let history=[];
 
 /* LOGIN */
 function login(){
-let name=document.getElementById("name").value;
-let age=document.getElementById("age").value;
-
-if(!name || !age){
-alert("Fill all fields");
-return;
-}
-
-if(age<18){
-alert("18+ only");
-return;
-}
-
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="flex";
-
-document.getElementById("coins").innerText=200;
-
+if(age.value<18){alert("18+ only");return;}
+login.style.display="none";
+app.style.display="flex";
+coins.innerText=200;
 socket = io("https://zuno-app.onrender.com");
 }
 
@@ -222,78 +241,84 @@ socket = io("https://zuno-app.onrender.com");
 function openTerms(){termsModal.style.display="block";}
 function closeTerms(){termsModal.style.display="none";}
 
-/* STATUS */
-function showStatus(t){
-statusText.innerText=t;
+/* PREMIUM */
+function openPremium(){premiumModal.style.display="block";}
+function closePremium(){premiumModal.style.display="none";}
+
+function buy(cost,hours){
+if(parseInt(coins.innerText)<cost){alert("Not enough coins");return;}
+coins.innerText=parseInt(coins.innerText)-cost;
+alert("Premium activated "+hours+" hours");
 }
+
+/* REPORT */
+function openReport(){reportModal.style.display="block";}
+function closeReport(){reportModal.style.display="none";}
+
+function report(type){
+alert("Reported: "+type);
+}
+
+/* HISTORY */
+function openHistory(){
+historyModal.style.display="block";
+historyBox.innerHTML=history.join("<br>");
+}
+function closeHistory(){historyModal.style.display="none";}
+
+/* STATUS */
+function showStatus(t){statusText.innerText=t;}
 
 /* START */
 async function start(){
-
 showStatus("Connecting...");
-
-stream = await navigator.mediaDevices.getUserMedia({
+stream=await navigator.mediaDevices.getUserMedia({
 video:{facingMode:facing,width:{ideal:640},height:{ideal:480}},
 audio:true
 });
-
 me.srcObject=stream;
-
-/* hide UI */
 deviceUI.style.display="none";
-
 socket.emit("start");
 }
 
 /* END */
 function end(){
-
 showStatus("Ended");
-
 if(stream){
 stream.getTracks().forEach(t=>t.stop());
 stream=null;
 me.srcObject=null;
 }
-
-/* show UI */
 deviceUI.style.display="block";
 stranger.srcObject=null;
-
 socket.emit("end");
 }
 
 /* NEXT */
-function next(){
-end();
-setTimeout(start,500);
-}
+function next(){end();setTimeout(start,500);}
 
-/* CAMERA FLIP */
+/* FLIP */
 function flipCamera(){
-facing = facing==="user"?"environment":"user";
-end();
-setTimeout(start,300);
+facing=facing==="user"?"environment":"user";
+end();setTimeout(start,300);
 }
-
-/* BUTTONS */
-function watchAd(){
-setTimeout(()=>{
-coins.innerText=parseInt(coins.innerText)+20;
-},1000);
-}
-
-function openPremium(){alert("Premium soon");}
-function openReport(){alert("Report soon");}
-function loadHistory(){alert("History soon");}
 
 /* CHAT */
 function send(){
 if(!msg.value)return;
+let text="You: "+msg.value;
+history.push(text);
 let d=document.createElement("div");
-d.innerText="You: "+msg.value;
+d.innerText=text;
 chat.appendChild(d);
 msg.value="";
+}
+
+/* ADS */
+function watchAd(){
+setTimeout(()=>{
+coins.innerText=parseInt(coins.innerText)+20;
+},1000);
 }
 
 /* DEVICES */
