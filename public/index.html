@@ -14,10 +14,7 @@ body{
 }
 
 /* LOGIN */
-#login{
-  text-align:center;
-  margin-top:100px;
-}
+#login{text-align:center;margin-top:100px;}
 
 input{
   padding:12px;
@@ -47,7 +44,6 @@ input{
 /* MAIN */
 #main{display:flex;height:calc(100vh - 60px);}
 
-/* LEFT VIDEO */
 #videoSide{
   width:60%;
   display:flex;
@@ -72,7 +68,6 @@ video{
   object-fit:cover;
 }
 
-/* CAMERA UI */
 .deviceUI{
   position:absolute;
   top:50%;
@@ -90,7 +85,7 @@ video{
   gap:10px;
 }
 
-/* RIGHT CHAT */
+/* CHAT */
 #chatSide{
   width:40%;
   background:#111;
@@ -101,10 +96,7 @@ video{
 #statusText{padding:10px;color:yellow;}
 #chat{flex:1;padding:10px;overflow:auto;}
 
-.chatInput{
-  display:flex;
-  padding:10px;
-}
+.chatInput{display:flex;padding:10px;}
 
 button{
   padding:8px 12px;
@@ -114,7 +106,7 @@ button{
   cursor:pointer;
 }
 
-/* MODAL */
+/* MODALS */
 .modal{
   display:none;
   position:fixed;
@@ -124,6 +116,7 @@ button{
   background:#222;
   padding:20px;
   border-radius:10px;
+  z-index:100;
 }
 .close{
   position:absolute;
@@ -137,22 +130,38 @@ button{
 
 <body>
 
-<!-- LOGIN -->
 <div id="login">
 <h1>ZUNO</h1>
 <input id="name" placeholder="Name"><br>
 <input id="age" type="number" placeholder="Age"><br>
 <button onclick="login()">Enter</button><br>
-<button onclick="openTerms()">Terms</button>
 </div>
 
-<!-- TERMS -->
-<div id="termsModal" class="modal">
-<span class="close" onclick="closeTerms()">❌</span>
-<p>18+ only</p>
+<!-- PREMIUM -->
+<div id="premiumModal" class="modal">
+<span class="close" onclick="closePremium()">❌</span>
+<h3>Premium</h3>
+<button onclick="buy(200,2)">Platinum (2h)</button><br>
+<button onclick="buy(500,10)">Gold (10h)</button><br>
+<button onclick="buy(1000,24)">Diamond (24h)</button>
 </div>
 
-<!-- APP -->
+<!-- REPORT -->
+<div id="reportModal" class="modal">
+<span class="close" onclick="closeReport()">❌</span>
+<h3>Report</h3>
+<button onclick="report('Abuse')">Abuse</button><br>
+<button onclick="report('Violence')">Violence</button><br>
+<button onclick="report('Nude')">Nude</button>
+</div>
+
+<!-- HISTORY -->
+<div id="historyModal" class="modal">
+<span class="close" onclick="closeHistory()">❌</span>
+<h3>History</h3>
+<div id="historyBox"></div>
+</div>
+
 <div id="app">
 
 <div class="top">
@@ -185,7 +194,7 @@ button{
 
 <div class="controls">
 <button onclick="start()">Start</button>
-<button onclick="next()">Next</button>
+<button onclick="next()">Next (-2)</button>
 <button onclick="end()">End</button>
 </div>
 
@@ -209,72 +218,81 @@ button{
 <script>
 let stream;
 let socket;
-let facing="user";
+let history=[];
 
-/* 🔥 FIXED LOGIN */
+/* LOGIN */
 function login(){
-let name = document.getElementById("name").value;
-let age = document.getElementById("age").value;
-
-if(!name || !age){
-alert("Enter name and age");
-return;
+if(age.value<18){alert("18+ only");return;}
+login.style.display="none";
+app.style.display="flex";
+coins.innerText=200;
+socket=io("https://zuno-app.onrender.com");
 }
 
-if(parseInt(age) < 18){
-alert("18+ only");
-return;
-}
-
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="flex";
-
-document.getElementById("coins").innerText = 200;
-
-socket = io("https://zuno-app.onrender.com");
-}
-
-/* CAMERA */
+/* START */
 async function start(){
-stream = await navigator.mediaDevices.getUserMedia({
-video:{facingMode:facing,width:{ideal:640},height:{ideal:480}},
-audio:true
-});
-document.getElementById("me").srcObject = stream;
+if(!stream){
+stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+me.srcObject=stream;
 deviceUI.style.display="none";
-if(socket) socket.emit("start");
+}
+socket.emit("start");
 }
 
+/* 🔥 FIXED NEXT (NO CAMERA RESET) */
+function next(){
+if(parseInt(coins.innerText)<2){alert("Need coins");return;}
+coins.innerText=parseInt(coins.innerText)-2;
+socket.emit("next");
+}
+
+/* END */
 function end(){
 if(stream){
 stream.getTracks().forEach(t=>t.stop());
 stream=null;
-document.getElementById("me").srcObject=null;
+me.srcObject=null;
 }
 deviceUI.style.display="block";
-stranger.srcObject=null;
-if(socket) socket.emit("end");
+socket.emit("end");
 }
 
-function next(){end();setTimeout(start,400);}
-
-function flipCamera(){
-facing = facing==="user"?"environment":"user";
-next();
+/* ADS */
+function watchAd(){
+window.open("https://www.profitableratecpm.com/");
+setTimeout(()=>{
+coins.innerText=parseInt(coins.innerText)+20;
+},3000);
 }
 
-/* UI */
-function openTerms(){termsModal.style.display="block";}
-function closeTerms(){termsModal.style.display="none";}
-function openPremium(){alert("Premium");}
-function openReport(){alert("Report");}
-function openHistory(){alert("History");}
-function watchAd(){coins.innerText=parseInt(coins.innerText)+20;}
+/* PREMIUM */
+function openPremium(){premiumModal.style.display="block";}
+function closePremium(){premiumModal.style.display="none";}
+function buy(cost,h){
+if(parseInt(coins.innerText)<cost){alert("No coins");return;}
+coins.innerText=parseInt(coins.innerText)-cost;
+alert("Premium "+h+" hours activated");
+}
 
+/* REPORT */
+function openReport(){reportModal.style.display="block";}
+function closeReport(){reportModal.style.display="none";}
+function report(t){alert("Reported "+t);}
+
+/* HISTORY */
+function openHistory(){
+historyModal.style.display="block";
+historyBox.innerHTML=history.join("<br>");
+}
+function closeHistory(){historyModal.style.display="none";}
+
+/* CHAT */
 function send(){
 if(!msg.value)return;
+let text="You: "+msg.value;
+history.push(text);
 let d=document.createElement("div");
-d.innerText="You: "+msg.value;
+d.innerText=text;
 chat.appendChild(d);
 msg.value="";
 }
