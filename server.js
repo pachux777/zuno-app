@@ -63,17 +63,36 @@ io.on("connection", (socket) => {
     socket.emit("history", socket.user.history);
   });
 
-  /* 🔥 WEBRTC SIGNALING (ADDED) */
+  /* 🔥 ========================= */
+  /* 🔥 ADDED WEBRTC SIGNALING */
+  /* 🔥 ========================= */
+
   socket.on("offer", (data)=>{
-    socket.partner?.emit("offer", data);
+    if(socket.partner){
+      socket.partner.emit("offer", data);
+    }
   });
 
   socket.on("answer", (data)=>{
-    socket.partner?.emit("answer", data);
+    if(socket.partner){
+      socket.partner.emit("answer", data);
+    }
   });
 
   socket.on("candidate", (data)=>{
-    socket.partner?.emit("candidate", data);
+    if(socket.partner){
+      socket.partner.emit("candidate", data);
+    }
+  });
+
+  /* 🔥 SAFE DISCONNECT FIX (ADDED) */
+  socket.on("disconnect", ()=>{
+    if (socket.partner) {
+      socket.partner.emit("end");
+      socket.partner.partner = null;
+    }
+
+    waiting = waiting.filter(s => s !== socket);
   });
 
 });
