@@ -99,12 +99,12 @@ input{
   object-fit:cover;
 }
 
-/* 🔥 KEEP but hide */
+/* KEEP BUT HIDE */
 .camOverlay{
   display:none !important;
 }
 
-/* 🔥 CENTER DEVICE UI */
+/* CENTER DEVICE UI */
 .deviceUI{
   position:absolute;
   top:50%;
@@ -113,8 +113,8 @@ input{
   background:rgba(0,0,0,0.6);
   padding:10px;
   border-radius:10px;
-  z-index:5;
   text-align:center;
+  z-index:5;
 }
 
 .blur{ filter:blur(8px); }
@@ -172,8 +172,8 @@ button{
 
 <div id="login">
 <h1>⚡ ZUNO ⚡</h1>
-<input id="name"><br>
-<input id="age" type="number"><br>
+<input id="name" placeholder="Enter Name"><br>
+<input id="age" type="number" placeholder="Enter Age"><br>
 <button onclick="login()">Enter</button><br>
 <button onclick="openTerms()">Terms</button>
 </div>
@@ -251,16 +251,30 @@ button{
 <script>
 let stream;
 
-/* LOGIN */
+/* LOGIN FIXED */
 function login(){
-if(age.value<18){alert("18+");return;}
-login.style.display="none";
-app.style.display="flex";
+let name=document.getElementById("name").value;
+let age=document.getElementById("age").value;
+
+if(!name || !age){
+alert("Fill all fields");
+return;
+}
+
+if(age<18){
+alert("18+ only");
+return;
+}
+
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="flex";
 }
 
 /* DEVICES */
 async function loadDevices(){
 let d=await navigator.mediaDevices.enumerateDevices();
+cameraSelect.innerHTML="";
+micSelect.innerHTML="";
 d.forEach(x=>{
 let o=document.createElement("option");
 o.value=x.deviceId;
@@ -273,10 +287,14 @@ if(x.kind==="audioinput")micSelect.appendChild(o);
 /* START */
 async function start(){
 let c=parseInt(coins.innerText);
-if(c<=0){alert("No coins");return;}
+if(c<=0){
+alert("No coins! watch ads");
+return;
+}
 
 stream=await navigator.mediaDevices.getUserMedia({
-video:true,audio:true
+video:true,
+audio:true
 });
 me.srcObject=stream;
 
@@ -299,7 +317,10 @@ deviceUI.style.display="block";
 /* NEXT */
 function next(){
 let c=parseInt(coins.innerText);
-if(c<2){alert("No coins");return;}
+if(c<2){
+alert("Not enough coins");
+return;
+}
 coins.innerText=c-2;
 end();
 setTimeout(start,500);
@@ -308,7 +329,7 @@ setTimeout(start,500);
 /* ADS */
 function watchAd(){
 coins.innerText=parseInt(coins.innerText)+20;
-alert("+20 coins");
+alert("+20 coins added");
 }
 
 /* CHAT */
