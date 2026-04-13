@@ -2,6 +2,7 @@ let socket;
 let coins = localStorage.getItem("coins") || 100;
 coins = parseInt(coins);
 
+/* 🔥 ADDED */
 let localStream;
 let peer;
 
@@ -22,7 +23,7 @@ function login(){
   document.getElementById("login").style.display="none";
   document.getElementById("app").style.display="block";
 
-  socket = io();
+  socket = io("https://zuno-app.onrender.com"); // 🔥 CHANGED (your server)
   setup();
 }
 
@@ -74,10 +75,12 @@ function showHistory(list){
   });
 }
 
-/* CAMERA + WEBRTC START */
+/* CAMERA */
 async function start(){
 
+  /* 🔥 ADDED */
   localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+
   me.srcObject = localStream;
 
   socket.emit("start");
@@ -88,13 +91,17 @@ function next(){
   coins -= 2;
   updateCoins();
 
+  /* 🔥 ADDED */
   if(peer){ peer.close(); }
 
   socket.emit("next");
 }
 
 function end(){
+
+  /* 🔥 ADDED */
   if(peer){ peer.close(); }
+
   socket.emit("end");
 }
 
@@ -111,11 +118,21 @@ function addMsg(t){
   chat.appendChild(d);
 }
 
-/* 🔥 WEBRTC CORE */
+/* 🔥 ========================= */
+/* 🔥 ADDED WEBRTC SECTION */
+/* 🔥 ========================= */
+
 function createPeer(isInitiator){
 
   peer = new RTCPeerConnection({
-    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+    iceServers:[
+      {urls:"stun:stun.l.google.com:19302"},
+      {
+        urls:"turn:openrelay.metered.ca:80",
+        username:"openrelayproject",
+        credential:"openrelayproject"
+      }
+    ]
   });
 
   localStream.getTracks().forEach(track=>{
@@ -144,9 +161,11 @@ function createPeer(isInitiator){
 function setup(){
 
   socket.on("matched",()=>{
+    /* 🔥 ADDED */
     createPeer(true);
   });
 
+  /* 🔥 ADDED */
   socket.on("offer", async (offer)=>{
     createPeer(false);
     await peer.setRemoteDescription(offer);
