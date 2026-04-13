@@ -14,7 +14,10 @@ body{
 }
 
 /* LOGIN */
-#login{text-align:center;margin-top:100px;}
+#login{
+  text-align:center;
+  margin-top:100px;
+}
 
 input{
   padding:12px;
@@ -41,11 +44,8 @@ input{
   border-radius:20px;
 }
 
-/* 🔥 MAIN LAYOUT FIX */
-#main{
-  display:flex;
-  height:calc(100vh - 60px);
-}
+/* MAIN */
+#main{display:flex;height:calc(100vh - 60px);}
 
 /* LEFT VIDEO */
 #videoSide{
@@ -57,7 +57,6 @@ input{
   gap:15px;
 }
 
-/* 🔥 FIX VIDEO SIZE */
 .videoBox{
   width:260px;
   height:260px;
@@ -73,7 +72,7 @@ video{
   object-fit:cover;
 }
 
-/* 🔥 CENTER CAMERA UI */
+/* CAMERA UI */
 .deviceUI{
   position:absolute;
   top:50%;
@@ -83,10 +82,9 @@ video{
   padding:8px;
   border-radius:10px;
   text-align:center;
-  z-index:5;
 }
 
-/* 🔥 BUTTONS ALWAYS VISIBLE */
+/* BUTTONS */
 .controls{
   display:flex;
   gap:10px;
@@ -113,7 +111,6 @@ button{
   border:none;
   border-radius:10px;
   background:cyan;
-  margin:2px;
   cursor:pointer;
 }
 
@@ -127,14 +124,13 @@ button{
   background:#222;
   padding:20px;
   border-radius:10px;
-  z-index:100;
 }
 .close{
   position:absolute;
   right:10px;
   top:5px;
-  cursor:pointer;
   color:red;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -171,7 +167,6 @@ button{
 
 <div id="main">
 
-<!-- LEFT -->
 <div id="videoSide">
 
 <div class="videoBox">
@@ -196,7 +191,6 @@ button{
 
 </div>
 
-<!-- RIGHT -->
 <div id="chatSide">
 <div id="statusText">Ready</div>
 <div id="chat"></div>
@@ -217,39 +211,57 @@ let stream;
 let socket;
 let facing="user";
 
-/* LOGIN */
+/* 🔥 FIXED LOGIN */
 function login(){
-if(age.value<18){alert("18+ only");return;}
-login.style.display="none";
-app.style.display="flex";
-coins.innerText=200;
-socket=io("https://zuno-app.onrender.com");
+let name = document.getElementById("name").value;
+let age = document.getElementById("age").value;
+
+if(!name || !age){
+alert("Enter name and age");
+return;
+}
+
+if(parseInt(age) < 18){
+alert("18+ only");
+return;
+}
+
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="flex";
+
+document.getElementById("coins").innerText = 200;
+
+socket = io("https://zuno-app.onrender.com");
 }
 
 /* CAMERA */
 async function start(){
-stream=await navigator.mediaDevices.getUserMedia({
+stream = await navigator.mediaDevices.getUserMedia({
 video:{facingMode:facing,width:{ideal:640},height:{ideal:480}},
 audio:true
 });
-me.srcObject=stream;
+document.getElementById("me").srcObject = stream;
 deviceUI.style.display="none";
-socket.emit("start");
+if(socket) socket.emit("start");
 }
 
 function end(){
 if(stream){
 stream.getTracks().forEach(t=>t.stop());
 stream=null;
-me.srcObject=null;
+document.getElementById("me").srcObject=null;
 }
 deviceUI.style.display="block";
 stranger.srcObject=null;
-socket.emit("end");
+if(socket) socket.emit("end");
 }
 
 function next(){end();setTimeout(start,400);}
-function flipCamera(){facing=facing==="user"?"environment":"user";next();}
+
+function flipCamera(){
+facing = facing==="user"?"environment":"user";
+next();
+}
 
 /* UI */
 function openTerms(){termsModal.style.display="block";}
