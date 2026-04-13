@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* SAME YOUR STYLE — NO CHANGE */
 body{
   margin:0;
   font-family:Arial;
@@ -14,9 +13,15 @@ body{
   overflow:hidden;
 }
 
-/* KEEP ALL YOUR CSS SAME */
-#login{ text-align:center; margin-top:120px; }
-#login h1{ font-size:40px; }
+/* LOGIN */
+#login{
+  text-align:center;
+  margin-top:120px;
+}
+
+#login h1{
+  font-size:40px;
+}
 
 input{
   padding:12px;
@@ -26,6 +31,7 @@ input{
   border:none;
 }
 
+/* TOP BAR */
 .top{
   display:flex;
   justify-content:space-between;
@@ -39,10 +45,32 @@ input{
   color:black;
   padding:6px 18px;
   border-radius:20px;
+  font-weight:bold;
 }
 
-#app{ display:none; height:100vh; flex-direction:column; }
-#main{ flex:1; display:flex; }
+.premiumBadge{
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:gold;
+  color:black;
+  padding:5px 12px;
+  border-radius:15px;
+  display:none;
+}
+
+/* MAIN */
+#app{
+  display:none;
+  height:100vh;
+  flex-direction:column;
+}
+
+#main{
+  flex:1;
+  display:flex;
+}
 
 #videoSide{
   width:65%;
@@ -60,13 +88,16 @@ input{
   border-radius:20px;
   overflow:hidden;
   position:relative;
+  box-shadow:0 0 25px rgba(0,255,255,0.5);
 }
 
-video{
+.videoBox video{
   width:100%;
   height:100%;
   object-fit:cover;
 }
+
+.camOverlay{display:none;}
 
 .deviceUI{
   position:absolute;
@@ -76,6 +107,7 @@ video{
   background:rgba(0,0,0,0.6);
   padding:10px;
   border-radius:10px;
+  z-index:5;
 }
 
 #chatSide{
@@ -85,17 +117,44 @@ video{
   flex-direction:column;
 }
 
-#statusText{ padding:8px; color:yellow; }
+#statusText{
+  padding:8px;
+  color:yellow;
+}
 
-#chat{ flex:1; padding:10px; overflow:auto; }
+#chat{
+  flex:1;
+  padding:10px;
+  overflow:auto;
+}
 
-.chatInput{ padding:10px; display:flex; }
+.chatInput{
+  padding:10px;
+  display:flex;
+}
 
 button{
   padding:10px;
   border:none;
   border-radius:10px;
   background:cyan;
+}
+
+.modal{
+  display:none;
+  position:fixed;
+  top:30%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#222;
+  padding:20px;
+  border-radius:10px;
+}
+.closeBtn{
+  position:absolute;
+  right:10px;
+  top:5px;
+  color:red;
 }
 </style>
 </head>
@@ -104,8 +163,8 @@ button{
 
 <div id="login">
 <h1>⚡ ZUNO ⚡</h1>
-<input id="name"><br>
-<input id="age" type="number"><br>
+<input id="name" placeholder="Enter Name"><br>
+<input id="age" type="number" placeholder="Enter Age"><br>
 <button onclick="login()">Enter</button>
 </div>
 
@@ -126,14 +185,12 @@ button{
 <div id="videoSide">
 
 <div class="videoBox">
-
-<div id="deviceUI" class="deviceUI">
+<div class="deviceUI" id="deviceUI">
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
 
 <video id="me" autoplay muted playsinline></video>
-
 </div>
 
 <div class="videoBox">
@@ -174,20 +231,7 @@ if(age.value<18){alert("18+ only");return;}
 login.style.display="none";
 app.style.display="flex";
 coins.innerText=200;
-
 socket = io("https://zuno-app.onrender.com");
-}
-
-/* DEVICES */
-async function loadDevices(){
-let d=await navigator.mediaDevices.enumerateDevices();
-d.forEach(x=>{
-let o=document.createElement("option");
-o.value=x.deviceId;
-o.text=x.label||x.kind;
-if(x.kind==="videoinput")cameraSelect.appendChild(o);
-if(x.kind==="audioinput")micSelect.appendChild(o);
-});
 }
 
 /* STATUS */
@@ -200,68 +244,52 @@ async function start(){
 showStatus("🔍 Connecting...");
 
 stream = await navigator.mediaDevices.getUserMedia({
-video:{width:640,height:480},
+video:{width:{ideal:640},height:{ideal:480}},
 audio:true
 });
 
 me.srcObject = stream;
+
+/* hide UI */
 deviceUI.style.display="none";
 
 if(socket) socket.emit("start");
 }
 
-/* 🔥 FIX END FULL STOP */
+/* END */
 function end(){
-
 showStatus("❌ Ended");
 
-/* FORCE STOP CAMERA */
+/* STOP CAMERA FIX */
 if(stream){
-stream.getTracks().forEach(track=>{
-track.stop();
-});
-me.srcObject = null;
-stream = null;
+stream.getTracks().forEach(t=>t.stop());
+me.srcObject=null;
+stream=null;
 }
 
-/* RESET UI */
+/* reset UI */
 deviceUI.style.display="block";
-
-/* RESET STRANGER */
-stranger.srcObject = null;
+stranger.srcObject=null;
 
 if(socket) socket.emit("end");
 }
 
 /* NEXT */
 function next(){
-let c=parseInt(coins.innerText);
-if(c<2){alert("Need coins");return;}
-coins.innerText=c-2;
-
 end();
 setTimeout(start,500);
 }
 
-/* 🔥 FIX BUTTON FUNCTIONS */
+/* BUTTON FIXES */
 function watchAd(){
 setTimeout(()=>{
 coins.innerText=parseInt(coins.innerText)+20;
-alert("+20 coins");
-},1500);
+},1000);
 }
 
-function openPremium(){
-alert("Premium coming soon");
-}
-
-function openReport(){
-alert("Report system coming soon");
-}
-
-function loadHistory(){
-alert("History coming soon");
-}
+function openPremium(){ alert("Premium soon"); }
+function openReport(){ alert("Report soon"); }
+function loadHistory(){ alert("History soon"); }
 
 /* CHAT */
 function send(){
@@ -272,7 +300,16 @@ chat.appendChild(d);
 msg.value="";
 }
 
-window.onload=loadDevices;
+/* DEVICES */
+navigator.mediaDevices.enumerateDevices().then(d=>{
+d.forEach(x=>{
+let o=document.createElement("option");
+o.value=x.deviceId;
+o.text=x.label||x.kind;
+if(x.kind==="videoinput")cameraSelect.appendChild(o);
+if(x.kind==="audioinput")micSelect.appendChild(o);
+});
+});
 </script>
 
 </body>
