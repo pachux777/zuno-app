@@ -19,10 +19,6 @@ body{
   margin-top:120px;
 }
 
-#login h1{
-  font-size:40px;
-}
-
 input{
   padding:12px;
   width:260px;
@@ -31,11 +27,10 @@ input{
   border:none;
 }
 
-/* TOP BAR */
+/* TOP */
 .top{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   padding:10px;
   background:#111;
 }
@@ -48,18 +43,9 @@ input{
 }
 
 /* MAIN */
-#app{
-  display:none;
-  height:100vh;
-  flex-direction:column;
-}
+#app{display:none;height:100vh;flex-direction:column;}
+#main{flex:1;display:flex;}
 
-#main{
-  flex:1;
-  display:flex;
-}
-
-/* VIDEO */
 #videoSide{
   width:65%;
   display:flex;
@@ -70,34 +56,33 @@ input{
 }
 
 .videoBox{
-  width:min(38vh,380px);
-  height:min(38vh,380px);
+  width:320px;
+  height:320px;
   background:black;
   border-radius:20px;
   overflow:hidden;
   position:relative;
 }
 
-/* 🔥 FIX CAMERA FIT */
-.videoBox video{
+video{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-/* 🔥 DEVICE UI */
+/* 🔥 CAMERA CONTROL UI LIKE OMEGLE */
 .deviceUI{
   position:absolute;
-  top:50%;
+  bottom:10px;
   left:50%;
-  transform:translate(-50%,-50%);
-  background:rgba(0,0,0,0.6);
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.7);
   padding:10px;
   border-radius:10px;
+  text-align:center;
   z-index:5;
 }
 
-/* CHAT */
 #chatSide{
   width:35%;
   background:#111;
@@ -110,16 +95,9 @@ input{
   color:yellow;
 }
 
-#chat{
-  flex:1;
-  padding:10px;
-  overflow:auto;
-}
+#chat{flex:1;padding:10px;}
 
-.chatInput{
-  padding:10px;
-  display:flex;
-}
+.chatInput{display:flex;padding:10px;}
 
 button{
   padding:10px;
@@ -127,36 +105,17 @@ button{
   border-radius:10px;
   background:cyan;
 }
-
-/* MODAL */
-.modal{
-  display:none;
-  position:fixed;
-  top:30%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#222;
-  padding:20px;
-  border-radius:10px;
-}
 </style>
 </head>
 
 <body>
 
 <div id="login">
-<h1>⚡ ZUNO ⚡</h1>
-<input id="name" placeholder="Enter Name"><br>
-<input id="age" type="number" placeholder="Enter Age"><br>
+<h1>ZUNO</h1>
+<input id="name"><br>
+<input id="age" type="number"><br>
 <button onclick="login()">Enter</button><br>
-
-<!-- 🔥 ADDED TERMS BUTTON -->
 <button onclick="openTerms()">Terms</button>
-</div>
-
-<div class="modal" id="termsModal">
-<p>18+ only. No abuse or nudity.</p>
-<button onclick="closeTerms()">Close</button>
 </div>
 
 <div id="app">
@@ -178,12 +137,14 @@ button{
 
 <div class="videoBox">
 
-<div id="deviceUI" class="deviceUI">
+<video id="me" autoplay muted playsinline></video>
+
+<!-- 🔥 CAMERA CONTROL -->
+<div class="deviceUI" id="deviceUI">
+<button onclick="flipCamera()">Flip Camera</button><br>
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
-
-<video id="me" autoplay muted playsinline></video>
 
 </div>
 
@@ -213,11 +174,11 @@ button{
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
 
 <script>
 let stream;
 let socket;
+let currentFacing="user";
 
 /* LOGIN */
 function login(){
@@ -225,51 +186,48 @@ if(age.value<18){alert("18+ only");return;}
 login.style.display="none";
 app.style.display="flex";
 coins.innerText=200;
-
 socket = io("https://zuno-app.onrender.com");
 }
-
-/* TERMS */
-function openTerms(){termsModal.style.display="block";}
-function closeTerms(){termsModal.style.display="none";}
 
 /* STATUS */
 function showStatus(t){
 statusText.innerText=t;
 }
 
-/* START */
+/* 🔥 STABLE CAMERA (NO BLINK) */
 async function start(){
 
-showStatus("🔍 Connecting...");
+showStatus("Connecting...");
 
-/* 🔥 FIX CAMERA (NO AUTO OFF) */
 stream = await navigator.mediaDevices.getUserMedia({
-video:{width:{ideal:640},height:{ideal:480}},
+video:{
+facingMode:currentFacing,
+width:{ideal:640},
+height:{ideal:480}
+},
 audio:true
 });
 
 me.srcObject = stream;
 
-/* 🔥 HIDE CAMERA UI (LIKE OMEGLE) */
+/* hide UI */
 deviceUI.style.display="none";
 
 if(socket) socket.emit("start");
 }
 
-/* END */
+/* 🔥 FULL STOP FIX */
 function end(){
 
-showStatus("❌ Ended");
+showStatus("Ended");
 
-/* 🔥 FULL STOP CAMERA */
 if(stream){
-stream.getTracks().forEach(t=>t.stop());
-me.srcObject=null;
+stream.getTracks().forEach(track=>track.stop());
 stream=null;
+me.srcObject=null;
 }
 
-/* 🔥 SHOW CAMERA SETTINGS BACK */
+/* show UI */
 deviceUI.style.display="block";
 
 stranger.srcObject=null;
@@ -283,16 +241,23 @@ end();
 setTimeout(start,500);
 }
 
-/* 🔥 FIX TOP BUTTONS */
+/* 🔥 CAMERA FLIP */
+function flipCamera(){
+currentFacing = currentFacing==="user"?"environment":"user";
+end();
+setTimeout(start,300);
+}
+
+/* 🔥 BUTTON FIXES */
 function watchAd(){
 setTimeout(()=>{
 coins.innerText=parseInt(coins.innerText)+20;
 },1000);
 }
 
-function openPremium(){ alert("Premium coming soon"); }
-function openReport(){ alert("Report coming soon"); }
-function loadHistory(){ alert("History coming soon"); }
+function openPremium(){ alert("Premium"); }
+function openReport(){ alert("Report"); }
+function loadHistory(){ alert("History"); }
 
 /* CHAT */
 function send(){
