@@ -108,28 +108,30 @@ input{
   transition:0.3s;
 }
 
+/* 🔥 ADD: hide icons */
+.camOverlay{
+  display:none !important;
+}
+
+/* 🔥 ADD: centered device UI */
+.deviceUI{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.6);
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  z-index:5;
+}
+
+/* 🔥 BLUR EFFECT */
 .blur{
   filter:blur(8px);
 }
 
-/* CAMERA BUTTONS */
-.camOverlay{
-  position:absolute;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:10px;
-}
-
-.camBtn{
-  background:rgba(0,0,0,0.6);
-  border-radius:50%;
-  padding:10px;
-  cursor:pointer;
-  font-size:18px;
-}
-
+/* 🔴 MIC OFF */
 .off{
   background:red !important;
 }
@@ -188,7 +190,6 @@ button{
   right:10px;
   cursor:pointer;
   color:red;
-  font-weight:bold;
 }
 </style>
 </head>
@@ -201,27 +202,23 @@ button{
 <input id="age" type="number" placeholder="Enter Age"><br>
 <button onclick="login()">Enter</button>
 
-<!-- 🔥 ADDED TERMS BUTTON -->
+<!-- 🔥 ADD -->
 <br>
 <button onclick="openTerms()">Terms</button>
 </div>
 
-<!-- 🔥 TERMS MODAL -->
+<!-- 🔥 ADD TERMS -->
 <div class="modal" id="termsModal">
 <span class="closeBtn" onclick="closeTerms()">X</span>
 <h3>Terms & Conditions</h3>
-<p>
-You must be 18+. No nudity, abuse, hate speech or illegal activity.
-Respect users. Violations = permanent ban.
-</p>
+<p>You must be 18+. No abuse, nudity, or illegal activity.</p>
 </div>
 
-<!-- 🔥 REPORT MODAL -->
+<!-- 🔥 ADD REPORT -->
 <div class="modal" id="reportModal">
 <span class="closeBtn" onclick="closeReport()">X</span>
-<h3>Report User</h3>
 <button onclick="report('Abuse')">Abuse</button>
-<button onclick="report('Nudity')">Nude</button>
+<button onclick="report('Nude')">Nude</button>
 <button onclick="report('Violence')">Violence</button>
 </div>
 
@@ -245,9 +242,8 @@ Respect users. Violations = permanent ban.
 
 <div class="videoBox">
 
-<!-- 🔥 CAMERA SELECT (LIKE OMEGLE) -->
-<div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:2;">
-<button onclick="flipCam()">Flip Camera</button><br>
+<!-- 🔥 ADD CENTER CAMERA SELECT -->
+<div class="deviceUI">
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
@@ -283,9 +279,9 @@ Respect users. Violations = permanent ban.
 
 <div id="chatSide">
 
-<!-- 🔥 18+ RULE -->
+<!-- 🔥 ADD RULE -->
 <div style="padding:10px;border-bottom:1px solid #333;">
-⚠ You must be 18+ | No nudity | No abuse | Be respectful
+⚠ 18+ | No nudity | No abuse
 </div>
 
 <div id="chat"></div>
@@ -299,53 +295,51 @@ Respect users. Violations = permanent ban.
 </div>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
-
 <script>
 let stream;
 let isPremium = false;
+
+/* 🔥 ADD HISTORY */
+function loadHistory(){
+  let data = document.getElementById("chat").innerHTML;
+  if(!data){alert("No history");return;}
+  let w = window.open("");
+  w.document.write(data);
+}
+
+/* 🔥 ADD TERMS */
+function openTerms(){termsModal.style.display="block";}
+function closeTerms(){termsModal.style.display="none";}
+
+/* 🔥 ADD REPORT */
+function openReport(){reportModal.style.display="block";}
+function closeReport(){reportModal.style.display="none";}
+function report(t){alert("Reported "+t);}
+
+/* 🔥 ADD DEVICES */
+async function loadDevices(){
+  let d=await navigator.mediaDevices.enumerateDevices();
+  cameraSelect.innerHTML="";
+  micSelect.innerHTML="";
+  d.forEach(x=>{
+    let o=document.createElement("option");
+    o.value=x.deviceId;
+    o.text=x.label||x.kind;
+    if(x.kind==="videoinput")cameraSelect.appendChild(o);
+    if(x.kind==="audioinput")micSelect.appendChild(o);
+  });
+}
 
 /* LOGIN */
 function login(){
   let name = document.getElementById("name").value;
   let age = document.getElementById("age").value;
 
-  if(!name || !age){
-    alert("Fill all fields");
-    return;
-  }
-
-  if(age < 18){
-    alert("Under 18 not allowed");
-    return;
-  }
+  if(!name || !age){ alert("Fill all fields"); return; }
+  if(age < 18){ alert("Under 18 not allowed"); return; }
 
   document.getElementById("login").style.display="none";
   document.getElementById("app").style.display="flex";
-}
-
-/* 🔥 TERMS */
-function openTerms(){document.getElementById("termsModal").style.display="block";}
-function closeTerms(){document.getElementById("termsModal").style.display="none";}
-
-/* 🔥 REPORT */
-function openReport(){document.getElementById("reportModal").style.display="block";}
-function closeReport(){document.getElementById("reportModal").style.display="none";}
-function report(type){alert("Reported: "+type);}
-
-/* 🔥 DEVICE LOAD */
-async function loadDevices(){
-let devices = await navigator.mediaDevices.enumerateDevices();
-cameraSelect.innerHTML="";
-micSelect.innerHTML="";
-devices.forEach(d=>{
-let o=document.createElement("option");
-o.value=d.deviceId;
-o.text=d.label||d.kind;
-if(d.kind==="videoinput")cameraSelect.appendChild(o);
-if(d.kind==="audioinput")micSelect.appendChild(o);
-});
 }
 
 /* START */
@@ -362,12 +356,9 @@ async function start(){
 }
 
 /* NEXT */
-function next(){
-  end();
-  setTimeout(start,500);
-}
+function next(){ end(); setTimeout(start,500); }
 
-/* END FIX */
+/* END */
 function end(){
   if(stream){
     stream.getTracks().forEach(t=>{
@@ -384,7 +375,7 @@ function toggleCam(){
   if(!stream) return;
   let t = stream.getVideoTracks()[0];
   t.enabled = !t.enabled;
-  me.classList.toggle("blur");
+  document.getElementById("me").classList.toggle("blur");
 }
 
 /* MIC */
@@ -392,19 +383,15 @@ function toggleMic(){
   if(!stream) return;
   let t = stream.getAudioTracks()[0];
   t.enabled = !t.enabled;
-  micBtn.classList.toggle("off");
 }
 
 /* SEND */
 function send(){
   let msg = document.getElementById("msg").value;
   if(!msg) return;
-
-  let chat = document.getElementById("chat");
   let div = document.createElement("div");
   div.textContent = "You: " + msg;
-
-  chat.appendChild(div);
+  document.getElementById("chat").appendChild(div);
   document.getElementById("msg").value="";
 }
 
@@ -419,18 +406,12 @@ function checkPremium(select){
 function openPremium(){
   isPremium=true;
   document.getElementById("premiumBadge").style.display="block";
-  alert("Premium Activated");
 }
 
-/* 🔥 INIT */
-window.addEventListener("load", ()=>{
+/* INIT */
+window.onload = ()=>{
   loadDevices();
-  document.querySelectorAll("button").forEach(btn=>{
-    btn.addEventListener("click", e=>{
-      e.stopPropagation();
-    });
-  });
-});
+};
 </script>
 
 </body>
