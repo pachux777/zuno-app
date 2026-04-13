@@ -45,19 +45,6 @@ input{
   color:black;
   padding:6px 18px;
   border-radius:20px;
-  font-weight:bold;
-}
-
-.premiumBadge{
-  position:absolute;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
-  background:gold;
-  color:black;
-  padding:5px 12px;
-  border-radius:15px;
-  display:none;
 }
 
 /* MAIN */
@@ -72,6 +59,7 @@ input{
   display:flex;
 }
 
+/* VIDEO */
 #videoSide{
   width:65%;
   display:flex;
@@ -88,17 +76,16 @@ input{
   border-radius:20px;
   overflow:hidden;
   position:relative;
-  box-shadow:0 0 25px rgba(0,255,255,0.5);
 }
 
+/* 🔥 FIX CAMERA FIT */
 .videoBox video{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-.camOverlay{display:none;}
-
+/* 🔥 DEVICE UI */
 .deviceUI{
   position:absolute;
   top:50%;
@@ -110,6 +97,7 @@ input{
   z-index:5;
 }
 
+/* CHAT */
 #chatSide{
   width:35%;
   background:#111;
@@ -140,6 +128,7 @@ button{
   background:cyan;
 }
 
+/* MODAL */
 .modal{
   display:none;
   position:fixed;
@@ -150,12 +139,6 @@ button{
   padding:20px;
   border-radius:10px;
 }
-.closeBtn{
-  position:absolute;
-  right:10px;
-  top:5px;
-  color:red;
-}
 </style>
 </head>
 
@@ -165,7 +148,15 @@ button{
 <h1>⚡ ZUNO ⚡</h1>
 <input id="name" placeholder="Enter Name"><br>
 <input id="age" type="number" placeholder="Enter Age"><br>
-<button onclick="login()">Enter</button>
+<button onclick="login()">Enter</button><br>
+
+<!-- 🔥 ADDED TERMS BUTTON -->
+<button onclick="openTerms()">Terms</button>
+</div>
+
+<div class="modal" id="termsModal">
+<p>18+ only. No abuse or nudity.</p>
+<button onclick="closeTerms()">Close</button>
 </div>
 
 <div id="app">
@@ -173,6 +164,7 @@ button{
 <div class="top">
 <button onclick="watchAd()">Ads</button>
 <div class="coin">🪙 <span id="coins">20</span></div>
+
 <div>
 <button onclick="openPremium()">Premium</button>
 <button onclick="openReport()">Report</button>
@@ -185,12 +177,14 @@ button{
 <div id="videoSide">
 
 <div class="videoBox">
-<div class="deviceUI" id="deviceUI">
+
+<div id="deviceUI" class="deviceUI">
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
 
 <video id="me" autoplay muted playsinline></video>
+
 </div>
 
 <div class="videoBox">
@@ -231,8 +225,13 @@ if(age.value<18){alert("18+ only");return;}
 login.style.display="none";
 app.style.display="flex";
 coins.innerText=200;
+
 socket = io("https://zuno-app.onrender.com");
 }
+
+/* TERMS */
+function openTerms(){termsModal.style.display="block";}
+function closeTerms(){termsModal.style.display="none";}
 
 /* STATUS */
 function showStatus(t){
@@ -241,8 +240,10 @@ statusText.innerText=t;
 
 /* START */
 async function start(){
+
 showStatus("🔍 Connecting...");
 
+/* 🔥 FIX CAMERA (NO AUTO OFF) */
 stream = await navigator.mediaDevices.getUserMedia({
 video:{width:{ideal:640},height:{ideal:480}},
 audio:true
@@ -250,7 +251,7 @@ audio:true
 
 me.srcObject = stream;
 
-/* hide UI */
+/* 🔥 HIDE CAMERA UI (LIKE OMEGLE) */
 deviceUI.style.display="none";
 
 if(socket) socket.emit("start");
@@ -258,17 +259,19 @@ if(socket) socket.emit("start");
 
 /* END */
 function end(){
+
 showStatus("❌ Ended");
 
-/* STOP CAMERA FIX */
+/* 🔥 FULL STOP CAMERA */
 if(stream){
 stream.getTracks().forEach(t=>t.stop());
 me.srcObject=null;
 stream=null;
 }
 
-/* reset UI */
+/* 🔥 SHOW CAMERA SETTINGS BACK */
 deviceUI.style.display="block";
+
 stranger.srcObject=null;
 
 if(socket) socket.emit("end");
@@ -280,16 +283,16 @@ end();
 setTimeout(start,500);
 }
 
-/* BUTTON FIXES */
+/* 🔥 FIX TOP BUTTONS */
 function watchAd(){
 setTimeout(()=>{
 coins.innerText=parseInt(coins.innerText)+20;
 },1000);
 }
 
-function openPremium(){ alert("Premium soon"); }
-function openReport(){ alert("Report soon"); }
-function loadHistory(){ alert("History soon"); }
+function openPremium(){ alert("Premium coming soon"); }
+function openReport(){ alert("Report coming soon"); }
+function loadHistory(){ alert("History coming soon"); }
 
 /* CHAT */
 function send(){
