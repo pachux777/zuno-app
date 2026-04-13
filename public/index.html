@@ -135,6 +135,15 @@ button{
 <input id="name" placeholder="Name"><br>
 <input id="age" type="number" placeholder="Age"><br>
 <button onclick="login()">Enter</button><br>
+
+<!-- 🔥 ADDED TERMS BUTTON -->
+<button onclick="openTerms()">Terms</button>
+</div>
+
+<!-- 🔥 TERMS MODAL -->
+<div id="termsModal" class="modal">
+<span class="close" onclick="closeTerms()">❌</span>
+<p>18+ only. No abuse, no nudity, be respectful.</p>
 </div>
 
 <!-- PREMIUM -->
@@ -220,14 +229,32 @@ let stream;
 let socket;
 let history=[];
 
-/* LOGIN */
+/* 🔥 FIXED LOGIN */
 function login(){
-if(age.value<18){alert("18+ only");return;}
-login.style.display="none";
-app.style.display="flex";
-coins.innerText=200;
+let ageVal = document.getElementById("age").value;
+let nameVal = document.getElementById("name").value;
+
+if(!nameVal || !ageVal){
+alert("Enter name and age");
+return;
+}
+
+if(parseInt(ageVal) < 18){
+alert("18+ only");
+return;
+}
+
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="flex";
+
+document.getElementById("coins").innerText=200;
+
 socket=io("https://zuno-app.onrender.com");
 }
+
+/* 🔥 TERMS */
+function openTerms(){termsModal.style.display="block";}
+function closeTerms(){termsModal.style.display="none";}
 
 /* START */
 async function start(){
@@ -239,7 +266,7 @@ deviceUI.style.display="none";
 socket.emit("start");
 }
 
-/* 🔥 FIXED NEXT (NO CAMERA RESET) */
+/* NEXT */
 function next(){
 if(parseInt(coins.innerText)<2){alert("Need coins");return;}
 coins.innerText=parseInt(coins.innerText)-2;
