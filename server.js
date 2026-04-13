@@ -63,6 +63,19 @@ io.on("connection", (socket) => {
     socket.emit("history", socket.user.history);
   });
 
+  /* 🔥 WEBRTC SIGNALING (ADDED) */
+  socket.on("offer", (data)=>{
+    socket.partner?.emit("offer", data);
+  });
+
+  socket.on("answer", (data)=>{
+    socket.partner?.emit("answer", data);
+  });
+
+  socket.on("candidate", (data)=>{
+    socket.partner?.emit("candidate", data);
+  });
+
 });
 
 server.listen(process.env.PORT || 10000, () => {
