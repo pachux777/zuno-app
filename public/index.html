@@ -13,7 +13,6 @@ body{
   overflow:hidden;
 }
 
-/* LOGIN */
 #login{
   text-align:center;
   margin-top:120px;
@@ -31,7 +30,6 @@ input{
   border:none;
 }
 
-/* TOP BAR */
 .top{
   display:flex;
   justify-content:space-between;
@@ -48,7 +46,6 @@ input{
   font-weight:bold;
 }
 
-/* PREMIUM */
 .premiumBadge{
   position:absolute;
   top:10px;
@@ -61,7 +58,6 @@ input{
   display:none;
 }
 
-/* MAIN */
 #app{
   display:none;
   height:100vh;
@@ -73,7 +69,6 @@ input{
   display:flex;
 }
 
-/* VIDEO */
 #videoSide{
   width:65%;
   display:flex;
@@ -99,12 +94,10 @@ input{
   object-fit:cover;
 }
 
-/* KEEP BUT HIDE */
 .camOverlay{
   display:none !important;
 }
 
-/* CENTER DEVICE UI */
 .deviceUI{
   position:absolute;
   top:50%;
@@ -117,14 +110,17 @@ input{
   z-index:5;
 }
 
-.blur{ filter:blur(8px); }
-
-/* CHAT */
 #chatSide{
   width:35%;
   background:#111;
   display:flex;
   flex-direction:column;
+}
+
+#statusText{
+  padding:8px;
+  color:yellow;
+  font-size:14px;
 }
 
 #chat{
@@ -148,7 +144,6 @@ button{
   background:cyan;
 }
 
-/* MODAL */
 .modal{
   display:none;
   position:fixed;
@@ -159,6 +154,7 @@ button{
   padding:20px;
   border-radius:10px;
 }
+
 .closeBtn{
   position:absolute;
   right:10px;
@@ -190,7 +186,6 @@ button{
 <button onclick="report('Violence')">Violence</button>
 </div>
 
-<!-- 🔥 ADD HISTORY MODAL -->
 <div class="modal" id="historyModal">
 <span class="closeBtn" onclick="closeHistory()">X</span>
 <h3>Chat History</h3>
@@ -245,7 +240,11 @@ button{
 
 <div id="chatSide">
 <div style="padding:10px;">⚠ 18+ only</div>
+
+<div id="statusText">Ready</div>
+
 <div id="chat"></div>
+
 <div class="chatInput">
 <input id="msg">
 <button onclick="send()">Send</button>
@@ -255,10 +254,23 @@ button{
 </div>
 </div>
 
+<script src="/socket.io/socket.io.js"></script>
+<script src="script.js"></script>
+
 <script>
 let stream;
 
-/* LOGIN (ADD 200 COINS) */
+function showStatus(text){
+document.getElementById("statusText").innerText=text;
+}
+
+/* 🔥 AUTO CONNECT STATUS FIX */
+const oldStart = window.start;
+window.start = async function(){
+  showStatus("🔍 Connecting...");
+  await oldStart();
+};
+
 function login(){
 let name=document.getElementById("name").value;
 let age=document.getElementById("age").value;
@@ -273,13 +285,12 @@ alert("18+ only");
 return;
 }
 
-document.getElementById("coins").innerText = 200; // 🔥 ADD
+document.getElementById("coins").innerText = 200;
 
 document.getElementById("login").style.display="none";
 document.getElementById("app").style.display="flex";
 }
 
-/* DEVICES */
 async function loadDevices(){
 let d=await navigator.mediaDevices.enumerateDevices();
 cameraSelect.innerHTML="";
@@ -293,82 +304,22 @@ if(x.kind==="audioinput")micSelect.appendChild(o);
 });
 }
 
-/* START */
-async function start(){
-let c=parseInt(coins.innerText);
-if(c<=0){
-alert("No coins! watch ads");
-return;
-}
+/* 🔥 SOCKET STATUS LISTENER */
+window.addEventListener("load", ()=>{
+  loadDevices();
 
-stream=await navigator.mediaDevices.getUserMedia({
-video:true,
-audio:true
+  setTimeout(()=>{
+    if(window.socket){
+      socket.on("matched", ()=>{
+        showStatus("👤 Stranger found...");
+      });
+
+      socket.on("end", ()=>{
+        showStatus("❌ Disconnected");
+      });
+    }
+  },1000);
 });
-me.srcObject=stream;
-
-deviceUI.style.display="none";
-}
-
-/* END */
-function end(){
-if(stream){
-stream.getTracks().forEach(t=>t.stop());
-me.srcObject=null;
-stream=null;
-}
-deviceUI.style.display="block";
-}
-
-/* NEXT */
-function next(){
-let c=parseInt(coins.innerText);
-if(c<2){
-alert("Not enough coins");
-return;
-}
-coins.innerText=c-2;
-end();
-setTimeout(start,500);
-}
-
-/* ADS (SIMULATED ADSTERRA) */
-function watchAd(){
-alert("Loading Ad...");
-setTimeout(()=>{
-coins.innerText=parseInt(coins.innerText)+20;
-alert("+20 coins added");
-},2000);
-}
-
-/* CHAT */
-function send(){
-if(!msg.value)return;
-let d=document.createElement("div");
-d.innerText="You: "+msg.value;
-chat.appendChild(d);
-msg.value="";
-}
-
-/* 🔥 HISTORY FIX (NO NEW TAB) */
-function loadHistory(){
-historyContent.innerHTML = chat.innerHTML;
-historyModal.style.display="block";
-}
-function closeHistory(){
-historyModal.style.display="none";
-}
-
-/* TERMS */
-function openTerms(){termsModal.style.display="block";}
-function closeTerms(){termsModal.style.display="none";}
-
-/* REPORT */
-function openReport(){reportModal.style.display="block";}
-function closeReport(){reportModal.style.display="none";}
-function report(t){alert(t);}
-
-window.onload=loadDevices;
 </script>
 
 </body>
