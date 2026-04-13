@@ -40,11 +40,6 @@ input{
   background:#111;
 }
 
-.left, .right{
-  display:flex;
-  gap:10px;
-}
-
 .coin{
   background:gold;
   color:black;
@@ -53,7 +48,7 @@ input{
   font-weight:bold;
 }
 
-/* 💎 PREMIUM BADGE */
+/* PREMIUM */
 .premiumBadge{
   position:absolute;
   top:10px;
@@ -63,7 +58,6 @@ input{
   color:black;
   padding:5px 12px;
   border-radius:15px;
-  font-size:14px;
   display:none;
 }
 
@@ -77,10 +71,9 @@ input{
 #main{
   flex:1;
   display:flex;
-  height:calc(100vh - 60px);
 }
 
-/* VIDEO SIDE */
+/* VIDEO */
 #videoSide{
   width:65%;
   display:flex;
@@ -90,30 +83,28 @@ input{
   gap:20px;
 }
 
-/* CAMERA */
 .videoBox{
-  width:min(38vh, 380px);
-  height:min(38vh, 380px);
+  width:min(38vh,380px);
+  height:min(38vh,380px);
   background:black;
   border-radius:20px;
   overflow:hidden;
   position:relative;
-  box-shadow:0 0 25px rgba(0,255,255,0.5), 0 0 60px rgba(0,255,255,0.2);
+  box-shadow:0 0 25px rgba(0,255,255,0.5);
 }
 
 .videoBox video{
   width:100%;
   height:100%;
   object-fit:cover;
-  transition:0.3s;
 }
 
-/* 🔥 ADD: hide icons */
+/* 🔥 KEEP but hide */
 .camOverlay{
   display:none !important;
 }
 
-/* 🔥 ADD: centered device UI */
+/* 🔥 CENTER DEVICE UI */
 .deviceUI{
   position:absolute;
   top:50%;
@@ -122,27 +113,18 @@ input{
   background:rgba(0,0,0,0.6);
   padding:10px;
   border-radius:10px;
-  text-align:center;
   z-index:5;
+  text-align:center;
 }
 
-/* 🔥 BLUR EFFECT */
-.blur{
-  filter:blur(8px);
-}
+.blur{ filter:blur(8px); }
 
-/* 🔴 MIC OFF */
-.off{
-  background:red !important;
-}
-
-/* CHAT SIDE */
+/* CHAT */
 #chatSide{
   width:35%;
+  background:#111;
   display:flex;
   flex-direction:column;
-  background:#111;
-  border-left:2px solid rgba(0,255,255,0.2);
 }
 
 #chat{
@@ -157,22 +139,16 @@ input{
   gap:10px;
 }
 
-.chatInput input{
-  flex:1;
-}
+.chatInput input{ flex:1; }
 
 button{
-  padding:10px 15px;
+  padding:10px;
   border:none;
   border-radius:10px;
   background:cyan;
-  cursor:pointer;
 }
 
-.controls{
-  text-align:center;
-}
-
+/* MODAL */
 .modal{
   display:none;
   position:fixed;
@@ -183,12 +159,10 @@ button{
   padding:20px;
   border-radius:10px;
 }
-
 .closeBtn{
   position:absolute;
-  top:5px;
   right:10px;
-  cursor:pointer;
+  top:5px;
   color:red;
 }
 </style>
@@ -198,23 +172,17 @@ button{
 
 <div id="login">
 <h1>⚡ ZUNO ⚡</h1>
-<input id="name" placeholder="Enter Name"><br>
-<input id="age" type="number" placeholder="Enter Age"><br>
-<button onclick="login()">Enter</button>
-
-<!-- 🔥 ADD -->
-<br>
+<input id="name"><br>
+<input id="age" type="number"><br>
+<button onclick="login()">Enter</button><br>
 <button onclick="openTerms()">Terms</button>
 </div>
 
-<!-- 🔥 ADD TERMS -->
 <div class="modal" id="termsModal">
 <span class="closeBtn" onclick="closeTerms()">X</span>
-<h3>Terms & Conditions</h3>
-<p>You must be 18+. No abuse, nudity, or illegal activity.</p>
+<p>18+ only. No abuse or nudity.</p>
 </div>
 
-<!-- 🔥 ADD REPORT -->
 <div class="modal" id="reportModal">
 <span class="closeBtn" onclick="closeReport()">X</span>
 <button onclick="report('Abuse')">Abuse</button>
@@ -228,7 +196,7 @@ button{
 
 <div class="top">
 <button onclick="watchAd()">Ads</button>
-<div class="coin">🪙 <span id="coins">0</span></div>
+<div class="coin">🪙 <span id="coins">20</span></div>
 <div>
 <button onclick="openPremium()">Premium</button>
 <button onclick="openReport()">Report</button>
@@ -242,8 +210,7 @@ button{
 
 <div class="videoBox">
 
-<!-- 🔥 ADD CENTER CAMERA SELECT -->
-<div class="deviceUI">
+<div class="deviceUI" id="deviceUI">
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
@@ -251,41 +218,27 @@ button{
 <video id="me" autoplay muted></video>
 
 <div class="camOverlay">
-<div id="camBtn" class="camBtn" onclick="toggleCam()">🎥</div>
-<div id="micBtn" class="camBtn" onclick="toggleMic()">🎤</div>
+<div onclick="toggleCam()">🎥</div>
+<div onclick="toggleMic()">🎤</div>
 </div>
+
 </div>
 
 <div class="videoBox">
-<video id="stranger" autoplay></video>
+<video id="stranger"></video>
 </div>
 
 <div class="controls">
 <button onclick="start()">Start</button>
 <button onclick="next()">Next (-2)</button>
 <button onclick="end()">End</button>
-
-<br><br>
-
-<select id="gender" onchange="checkPremium(this)">
-<option value="all">All</option>
-<option value="boys">Boys (Premium)</option>
-<option value="girls">Girls (Premium)</option>
-</select>
-
 </div>
 
 </div>
 
 <div id="chatSide">
-
-<!-- 🔥 ADD RULE -->
-<div style="padding:10px;border-bottom:1px solid #333;">
-⚠ 18+ | No nudity | No abuse
-</div>
-
+<div style="padding:10px;">⚠ 18+ only</div>
 <div id="chat"></div>
-
 <div class="chatInput">
 <input id="msg">
 <button onclick="send()">Send</button>
@@ -297,121 +250,92 @@ button{
 
 <script>
 let stream;
-let isPremium = false;
-
-/* 🔥 ADD HISTORY */
-function loadHistory(){
-  let data = document.getElementById("chat").innerHTML;
-  if(!data){alert("No history");return;}
-  let w = window.open("");
-  w.document.write(data);
-}
-
-/* 🔥 ADD TERMS */
-function openTerms(){termsModal.style.display="block";}
-function closeTerms(){termsModal.style.display="none";}
-
-/* 🔥 ADD REPORT */
-function openReport(){reportModal.style.display="block";}
-function closeReport(){reportModal.style.display="none";}
-function report(t){alert("Reported "+t);}
-
-/* 🔥 ADD DEVICES */
-async function loadDevices(){
-  let d=await navigator.mediaDevices.enumerateDevices();
-  cameraSelect.innerHTML="";
-  micSelect.innerHTML="";
-  d.forEach(x=>{
-    let o=document.createElement("option");
-    o.value=x.deviceId;
-    o.text=x.label||x.kind;
-    if(x.kind==="videoinput")cameraSelect.appendChild(o);
-    if(x.kind==="audioinput")micSelect.appendChild(o);
-  });
-}
 
 /* LOGIN */
 function login(){
-  let name = document.getElementById("name").value;
-  let age = document.getElementById("age").value;
+if(age.value<18){alert("18+");return;}
+login.style.display="none";
+app.style.display="flex";
+}
 
-  if(!name || !age){ alert("Fill all fields"); return; }
-  if(age < 18){ alert("Under 18 not allowed"); return; }
-
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").style.display="flex";
+/* DEVICES */
+async function loadDevices(){
+let d=await navigator.mediaDevices.enumerateDevices();
+d.forEach(x=>{
+let o=document.createElement("option");
+o.value=x.deviceId;
+o.text=x.label||x.kind;
+if(x.kind==="videoinput")cameraSelect.appendChild(o);
+if(x.kind==="audioinput")micSelect.appendChild(o);
+});
 }
 
 /* START */
 async function start(){
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: cameraSelect.value ? {deviceId:{exact:cameraSelect.value}} : true,
-      audio: micSelect.value ? {deviceId:{exact:micSelect.value}} : true
-    });
-    document.getElementById("me").srcObject = stream;
-  }catch(e){
-    alert("Camera permission denied");
-  }
-}
+let c=parseInt(coins.innerText);
+if(c<=0){alert("No coins");return;}
 
-/* NEXT */
-function next(){ end(); setTimeout(start,500); }
+stream=await navigator.mediaDevices.getUserMedia({
+video:true,audio:true
+});
+me.srcObject=stream;
+
+/* hide UI */
+deviceUI.style.display="none";
+}
 
 /* END */
 function end(){
-  if(stream){
-    stream.getTracks().forEach(t=>{
-      t.stop();
-      t.enabled=false;
-    });
-    document.getElementById("me").srcObject=null;
-    stream=null;
-  }
+if(stream){
+stream.getTracks().forEach(t=>t.stop());
+me.srcObject=null;
+stream=null;
 }
 
-/* CAMERA */
-function toggleCam(){
-  if(!stream) return;
-  let t = stream.getVideoTracks()[0];
-  t.enabled = !t.enabled;
-  document.getElementById("me").classList.toggle("blur");
+/* show UI */
+deviceUI.style.display="block";
 }
 
-/* MIC */
-function toggleMic(){
-  if(!stream) return;
-  let t = stream.getAudioTracks()[0];
-  t.enabled = !t.enabled;
+/* NEXT */
+function next(){
+let c=parseInt(coins.innerText);
+if(c<2){alert("No coins");return;}
+coins.innerText=c-2;
+end();
+setTimeout(start,500);
 }
 
-/* SEND */
+/* ADS */
+function watchAd(){
+coins.innerText=parseInt(coins.innerText)+20;
+alert("+20 coins");
+}
+
+/* CHAT */
 function send(){
-  let msg = document.getElementById("msg").value;
-  if(!msg) return;
-  let div = document.createElement("div");
-  div.textContent = "You: " + msg;
-  document.getElementById("chat").appendChild(div);
-  document.getElementById("msg").value="";
+if(!msg.value)return;
+let d=document.createElement("div");
+d.innerText="You: "+msg.value;
+chat.appendChild(d);
+msg.value="";
 }
 
-/* PREMIUM */
-function checkPremium(select){
-  if(!isPremium && select.value !== "all"){
-    alert("Premium required");
-    select.value="all";
-  }
+/* HISTORY */
+function loadHistory(){
+let w=window.open("");
+w.document.write(chat.innerHTML);
 }
 
-function openPremium(){
-  isPremium=true;
-  document.getElementById("premiumBadge").style.display="block";
-}
+/* TERMS */
+function openTerms(){termsModal.style.display="block";}
+function closeTerms(){termsModal.style.display="none";}
 
-/* INIT */
-window.onload = ()=>{
-  loadDevices();
-};
+/* REPORT */
+function openReport(){reportModal.style.display="block";}
+function closeReport(){reportModal.style.display="none";}
+function report(t){alert(t);}
+
+window.onload=loadDevices;
 </script>
 
 </body>
