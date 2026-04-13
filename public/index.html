@@ -190,6 +190,13 @@ button{
 <button onclick="report('Violence')">Violence</button>
 </div>
 
+<!-- 🔥 ADD HISTORY MODAL -->
+<div class="modal" id="historyModal">
+<span class="closeBtn" onclick="closeHistory()">X</span>
+<h3>Chat History</h3>
+<div id="historyContent"></div>
+</div>
+
 <div id="app">
 
 <div class="premiumBadge" id="premiumBadge">💎 PREMIUM</div>
@@ -251,7 +258,7 @@ button{
 <script>
 let stream;
 
-/* LOGIN FIXED */
+/* LOGIN (ADD 200 COINS) */
 function login(){
 let name=document.getElementById("name").value;
 let age=document.getElementById("age").value;
@@ -265,6 +272,8 @@ if(age<18){
 alert("18+ only");
 return;
 }
+
+document.getElementById("coins").innerText = 200; // 🔥 ADD
 
 document.getElementById("login").style.display="none";
 document.getElementById("app").style.display="flex";
@@ -298,7 +307,6 @@ audio:true
 });
 me.srcObject=stream;
 
-/* hide UI */
 deviceUI.style.display="none";
 }
 
@@ -309,8 +317,6 @@ stream.getTracks().forEach(t=>t.stop());
 me.srcObject=null;
 stream=null;
 }
-
-/* show UI */
 deviceUI.style.display="block";
 }
 
@@ -326,10 +332,13 @@ end();
 setTimeout(start,500);
 }
 
-/* ADS */
+/* ADS (SIMULATED ADSTERRA) */
 function watchAd(){
+alert("Loading Ad...");
+setTimeout(()=>{
 coins.innerText=parseInt(coins.innerText)+20;
 alert("+20 coins added");
+},2000);
 }
 
 /* CHAT */
@@ -341,10 +350,13 @@ chat.appendChild(d);
 msg.value="";
 }
 
-/* HISTORY */
+/* 🔥 HISTORY FIX (NO NEW TAB) */
 function loadHistory(){
-let w=window.open("");
-w.document.write(chat.innerHTML);
+historyContent.innerHTML = chat.innerHTML;
+historyModal.style.display="block";
+}
+function closeHistory(){
+historyModal.style.display="none";
 }
 
 /* TERMS */
