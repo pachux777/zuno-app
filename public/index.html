@@ -13,6 +13,7 @@ body{
   overflow:hidden;
 }
 
+/* LOGIN */
 #login{
   text-align:center;
   margin-top:120px;
@@ -30,6 +31,7 @@ input{
   border:none;
 }
 
+/* TOP BAR */
 .top{
   display:flex;
   justify-content:space-between;
@@ -46,18 +48,7 @@ input{
   font-weight:bold;
 }
 
-.premiumBadge{
-  position:absolute;
-  top:10px;
-  left:50%;
-  transform:translateX(-50%);
-  background:gold;
-  color:black;
-  padding:5px 12px;
-  border-radius:15px;
-  display:none;
-}
-
+/* MAIN */
 #app{
   display:none;
   height:100vh;
@@ -69,6 +60,7 @@ input{
   display:flex;
 }
 
+/* VIDEO */
 #videoSide{
   width:65%;
   display:flex;
@@ -94,10 +86,7 @@ input{
   object-fit:cover;
 }
 
-.camOverlay{
-  display:none !important;
-}
-
+/* DEVICE UI */
 .deviceUI{
   position:absolute;
   top:50%;
@@ -106,10 +95,10 @@ input{
   background:rgba(0,0,0,0.6);
   padding:10px;
   border-radius:10px;
-  text-align:center;
   z-index:5;
 }
 
+/* CHAT */
 #chatSide{
   width:35%;
   background:#111;
@@ -120,7 +109,6 @@ input{
 #statusText{
   padding:8px;
   color:yellow;
-  font-size:14px;
 }
 
 #chat{
@@ -143,24 +131,6 @@ button{
   border-radius:10px;
   background:cyan;
 }
-
-.modal{
-  display:none;
-  position:fixed;
-  top:30%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#222;
-  padding:20px;
-  border-radius:10px;
-}
-
-.closeBtn{
-  position:absolute;
-  right:10px;
-  top:5px;
-  color:red;
-}
 </style>
 </head>
 
@@ -170,40 +140,14 @@ button{
 <h1>⚡ ZUNO ⚡</h1>
 <input id="name" placeholder="Enter Name"><br>
 <input id="age" type="number" placeholder="Enter Age"><br>
-<button onclick="login()">Enter</button><br>
-<button onclick="openTerms()">Terms</button>
-</div>
-
-<div class="modal" id="termsModal">
-<span class="closeBtn" onclick="closeTerms()">X</span>
-<p>18+ only. No abuse or nudity.</p>
-</div>
-
-<div class="modal" id="reportModal">
-<span class="closeBtn" onclick="closeReport()">X</span>
-<button onclick="report('Abuse')">Abuse</button>
-<button onclick="report('Nude')">Nude</button>
-<button onclick="report('Violence')">Violence</button>
-</div>
-
-<div class="modal" id="historyModal">
-<span class="closeBtn" onclick="closeHistory()">X</span>
-<h3>Chat History</h3>
-<div id="historyContent"></div>
+<button onclick="login()">Enter</button>
 </div>
 
 <div id="app">
 
-<div class="premiumBadge" id="premiumBadge">💎 PREMIUM</div>
-
 <div class="top">
 <button onclick="watchAd()">Ads</button>
 <div class="coin">🪙 <span id="coins">20</span></div>
-<div>
-<button onclick="openPremium()">Premium</button>
-<button onclick="openReport()">Report</button>
-<button onclick="loadHistory()">History</button>
-</div>
 </div>
 
 <div id="main">
@@ -212,25 +156,20 @@ button{
 
 <div class="videoBox">
 
-<div class="deviceUI" id="deviceUI">
+<div id="deviceUI" class="deviceUI">
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
 
-<video id="me" autoplay muted></video>
-
-<div class="camOverlay">
-<div onclick="toggleCam()">🎥</div>
-<div onclick="toggleMic()">🎤</div>
-</div>
+<video id="me" autoplay muted playsinline></video>
 
 </div>
 
 <div class="videoBox">
-<video id="stranger"></video>
+<video id="stranger" autoplay playsinline></video>
 </div>
 
-<div class="controls">
+<div>
 <button onclick="start()">Start</button>
 <button onclick="next()">Next (-2)</button>
 <button onclick="end()">End</button>
@@ -239,7 +178,6 @@ button{
 </div>
 
 <div id="chatSide">
-<div style="padding:10px;">⚠ 18+ only</div>
 
 <div id="statusText">Ready</div>
 
@@ -249,34 +187,25 @@ button{
 <input id="msg">
 <button onclick="send()">Send</button>
 </div>
+
 </div>
 
 </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
 
 <script>
 let stream;
+let socket;
 
-function showStatus(text){
-document.getElementById("statusText").innerText=text;
-}
-
-/* 🔥 AUTO CONNECT STATUS FIX */
-const oldStart = window.start;
-window.start = async function(){
-  showStatus("🔍 Connecting...");
-  await oldStart();
-};
-
+/* LOGIN */
 function login(){
-let name=document.getElementById("name").value;
+let name=nameInput?.value || document.getElementById("name").value;
 let age=document.getElementById("age").value;
 
 if(!name || !age){
-alert("Fill all fields");
+alert("Fill all");
 return;
 }
 
@@ -285,12 +214,15 @@ alert("18+ only");
 return;
 }
 
-document.getElementById("coins").innerText = 200;
+coins.innerText=200;
 
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="flex";
+login.style.display="none";
+app.style.display="flex";
+
+socket = io("https://zuno-app.onrender.com");
 }
 
+/* DEVICES */
 async function loadDevices(){
 let d=await navigator.mediaDevices.enumerateDevices();
 cameraSelect.innerHTML="";
@@ -304,22 +236,81 @@ if(x.kind==="audioinput")micSelect.appendChild(o);
 });
 }
 
-/* 🔥 SOCKET STATUS LISTENER */
-window.addEventListener("load", ()=>{
-  loadDevices();
+/* STATUS */
+function showStatus(t){
+statusText.innerText=t;
+}
 
-  setTimeout(()=>{
-    if(window.socket){
-      socket.on("matched", ()=>{
-        showStatus("👤 Stranger found...");
-      });
+/* START */
+async function start(){
 
-      socket.on("end", ()=>{
-        showStatus("❌ Disconnected");
-      });
-    }
-  },1000);
+showStatus("🔍 Connecting...");
+
+stream=await navigator.mediaDevices.getUserMedia({
+video:{
+width:{ideal:640},
+height:{ideal:480},
+facingMode:"user"
+},
+audio:true
 });
+
+me.srcObject=stream;
+
+/* 🔥 HIDE CAMERA SETTINGS */
+deviceUI.style.display="none";
+
+socket.emit("start");
+}
+
+/* END */
+function end(){
+
+showStatus("❌ Ended");
+
+/* 🔥 STOP CAMERA */
+if(stream){
+stream.getTracks().forEach(t=>t.stop());
+me.srcObject=null;
+stream=null;
+}
+
+/* 🔥 SHOW SETTINGS AGAIN */
+deviceUI.style.display="block";
+
+socket.emit("end");
+}
+
+/* NEXT */
+function next(){
+let c=parseInt(coins.innerText);
+if(c<2){alert("Need coins");return;}
+coins.innerText=c-2;
+
+end();
+
+setTimeout(start,500);
+}
+
+/* ADS */
+function watchAd(){
+setTimeout(()=>{
+coins.innerText=parseInt(coins.innerText)+20;
+alert("+20 coins");
+},2000);
+}
+
+/* CHAT */
+function send(){
+if(!msg.value)return;
+let d=document.createElement("div");
+d.innerText="You: "+msg.value;
+chat.appendChild(d);
+msg.value="";
+}
+
+/* INIT */
+window.onload=loadDevices;
 </script>
 
 </body>
