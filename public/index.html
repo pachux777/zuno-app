@@ -13,6 +13,7 @@ body{
   overflow:hidden;
 }
 
+/* LOGIN */
 #login{text-align:center;margin-top:100px;}
 
 input{
@@ -23,6 +24,7 @@ input{
   border:none;
 }
 
+/* APP */
 #app{display:none;height:100vh;flex-direction:column;}
 
 .top{
@@ -39,20 +41,26 @@ input{
   border-radius:20px;
 }
 
-#main{display:flex;flex:1;}
+/* 🔥 MAIN LAYOUT FIX */
+#main{
+  display:flex;
+  height:calc(100vh - 60px);
+}
 
+/* LEFT VIDEO */
 #videoSide{
-  width:65%;
+  width:60%;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:20px;
+  gap:15px;
 }
 
+/* 🔥 FIX VIDEO SIZE */
 .videoBox{
-  width:320px;
-  height:320px;
+  width:260px;
+  height:260px;
   background:black;
   border-radius:20px;
   overflow:hidden;
@@ -65,51 +73,75 @@ video{
   object-fit:cover;
 }
 
+/* 🔥 CENTER CAMERA UI */
 .deviceUI{
   position:absolute;
   top:50%;
   left:50%;
   transform:translate(-50%,-50%);
-  background:rgba(0,0,0,0.7);
-  padding:10px;
+  background:rgba(0,0,0,0.6);
+  padding:8px;
   border-radius:10px;
+  text-align:center;
+  z-index:5;
 }
 
+/* 🔥 BUTTONS ALWAYS VISIBLE */
+.controls{
+  display:flex;
+  gap:10px;
+}
+
+/* RIGHT CHAT */
 #chatSide{
-  width:35%;
+  width:40%;
   background:#111;
   display:flex;
   flex-direction:column;
 }
 
 #statusText{padding:10px;color:yellow;}
-#chat{flex:1;padding:10px;}
+#chat{flex:1;padding:10px;overflow:auto;}
 
-.chatInput{display:flex;padding:10px;}
+.chatInput{
+  display:flex;
+  padding:10px;
+}
 
 button{
-  padding:10px;
+  padding:8px 12px;
   border:none;
   border-radius:10px;
   background:cyan;
-  margin:5px;
+  margin:2px;
+  cursor:pointer;
 }
 
+/* MODAL */
 .modal{
   display:none;
   position:fixed;
-  top:30%;
+  top:50%;
   left:50%;
   transform:translate(-50%,-50%);
   background:#222;
   padding:20px;
   border-radius:10px;
+  z-index:100;
+}
+.close{
+  position:absolute;
+  right:10px;
+  top:5px;
+  cursor:pointer;
+  color:red;
 }
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="login">
 <h1>ZUNO</h1>
 <input id="name" placeholder="Name"><br>
@@ -118,11 +150,13 @@ button{
 <button onclick="openTerms()">Terms</button>
 </div>
 
+<!-- TERMS -->
 <div id="termsModal" class="modal">
+<span class="close" onclick="closeTerms()">❌</span>
 <p>18+ only</p>
-<button onclick="closeTerms()">Close</button>
 </div>
 
+<!-- APP -->
 <div id="app">
 
 <div class="top">
@@ -137,6 +171,7 @@ button{
 
 <div id="main">
 
+<!-- LEFT -->
 <div id="videoSide">
 
 <div class="videoBox">
@@ -147,14 +182,13 @@ button{
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
-
 </div>
 
 <div class="videoBox">
 <video id="stranger" autoplay playsinline></video>
 </div>
 
-<div>
+<div class="controls">
 <button onclick="start()">Start</button>
 <button onclick="next()">Next</button>
 <button onclick="end()">End</button>
@@ -162,6 +196,7 @@ button{
 
 </div>
 
+<!-- RIGHT -->
 <div id="chatSide">
 <div id="statusText">Ready</div>
 <div id="chat"></div>
@@ -184,92 +219,46 @@ let facing="user";
 
 /* LOGIN */
 function login(){
-let age=document.getElementById("age").value;
-if(age<18){alert("18+ only");return;}
-
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="flex";
-
-document.getElementById("coins").innerText=200;
-
-/* 🔥 FIX SOCKET INIT */
-socket = io("https://zuno-app.onrender.com");
+if(age.value<18){alert("18+ only");return;}
+login.style.display="none";
+app.style.display="flex";
+coins.innerText=200;
+socket=io("https://zuno-app.onrender.com");
 }
 
-/* 🔥 SAFE START */
+/* CAMERA */
 async function start(){
-
-if(!socket){
-alert("Not connected yet");
-return;
-}
-
-showStatus("Connecting...");
-
-try{
-stream = await navigator.mediaDevices.getUserMedia({
+stream=await navigator.mediaDevices.getUserMedia({
 video:{facingMode:facing,width:{ideal:640},height:{ideal:480}},
 audio:true
 });
-
 me.srcObject=stream;
 deviceUI.style.display="none";
-
 socket.emit("start");
-
-}catch(e){
-alert("Camera error");
-}
 }
 
-/* END */
 function end(){
-
-showStatus("Ended");
-
 if(stream){
 stream.getTracks().forEach(t=>t.stop());
 stream=null;
 me.srcObject=null;
 }
-
 deviceUI.style.display="block";
 stranger.srcObject=null;
-
-if(socket) socket.emit("end");
+socket.emit("end");
 }
 
-/* NEXT */
-function next(){
-end();
-setTimeout(start,500);
-}
+function next(){end();setTimeout(start,400);}
+function flipCamera(){facing=facing==="user"?"environment":"user";next();}
 
-/* FLIP */
-function flipCamera(){
-facing=facing==="user"?"environment":"user";
-end();
-setTimeout(start,300);
-}
-
-/* STATUS */
-function showStatus(t){
-statusText.innerText=t;
-}
-
-/* UI FUNCTIONS */
+/* UI */
 function openTerms(){termsModal.style.display="block";}
 function closeTerms(){termsModal.style.display="none";}
 function openPremium(){alert("Premium");}
 function openReport(){alert("Report");}
 function openHistory(){alert("History");}
-function watchAd(){
-setTimeout(()=>{
-coins.innerText=parseInt(coins.innerText)+20;
-},1000);
-}
+function watchAd(){coins.innerText=parseInt(coins.innerText)+20;}
 
-/* CHAT */
 function send(){
 if(!msg.value)return;
 let d=document.createElement("div");
