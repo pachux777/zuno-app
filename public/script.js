@@ -2,6 +2,9 @@ let socket;
 let coins = localStorage.getItem("coins") || 100;
 coins = parseInt(coins);
 
+let localStream;
+let peer;
+
 function updateCoins(){
   document.getElementById("coins").innerText = coins;
   localStorage.setItem("coins", coins);
@@ -71,10 +74,12 @@ function showHistory(list){
   });
 }
 
-/* CAMERA */
+/* CAMERA + WEBRTC START */
 async function start(){
-  let stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-  me.srcObject = stream;
+
+  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  me.srcObject = localStream;
+
   socket.emit("start");
 }
 
@@ -82,10 +87,14 @@ function next(){
   if(coins < 2){ alert("Need coins"); return; }
   coins -= 2;
   updateCoins();
+
+  if(peer){ peer.close(); }
+
   socket.emit("next");
 }
 
 function end(){
+  if(peer){ peer.close(); }
   socket.emit("end");
 }
 
@@ -102,10 +111,66 @@ function addMsg(t){
   chat.appendChild(d);
 }
 
+/* 🔥 WEBRTC CORE */
+function createPeer(isInitiator){
+
+  peer = new RTCPeerConnection({
+    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+  });
+
+  localStream.getTracks().forEach(track=>{
+    peer.addTrack(track, localStream);
+  });
+
+  peer.ontrack = e=>{
+    stranger.srcObject = e.streams[0];
+  };
+
+  peer.onicecandidate = e=>{
+    if(e.candidate){
+      socket.emit("candidate", e.candidate);
+    }
+  };
+
+  if(isInitiator){
+    peer.createOffer().then(offer=>{
+      peer.setLocalDescription(offer);
+      socket.emit("offer", offer);
+    });
+  }
+}
+
 /* SOCKET */
 function setup(){
 
-  socket.on("matched",()=>{});
+  socket.on("matched",()=>{
+    createPeer(true);
+  });
+
+  socket.on("offer", async (offer)=>{
+    createPeer(false);
+    await peer.setRemoteDescription(offer);
+
+    let answer = await peer.createAnswer();
+    await peer.setLocalDescription(answer);
+
+    socket.emit("answer", answer);
+  });
+
+  socket.on("answer", async (answer)=>{
+    await peer.setRemoteDescription(answer);
+  });
+
+  socket.on("candidate", async (c)=>{
+    if(peer){
+      await peer.addIceCandidate(c);
+    }
+  });
+
+  socket.on("end", ()=>{
+    if(peer){ peer.close(); }
+    stranger.srcObject = null;
+  });
 
   socket.on("message",(m)=>{
     addMsg("Stranger: "+m);
