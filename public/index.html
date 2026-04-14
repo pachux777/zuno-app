@@ -1,357 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>ZUNO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZUNO</title>
 
-<style>
-body{
-margin:0;
-font-family:Arial;
-background:#0d2b45;
-color:white;
-overflow:hidden;
-}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-#login{text-align:center;margin-top:80px;}
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #0d2238;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
 
-#login h1{
-color:red;
-font-size:50px;
-}
+    .box {
+      text-align: center;
+      width: 300px;
+    }
 
-input{
-padding:12px;
-width:260px;
-margin:10px;
-border-radius:5px;
-border:none;
-background:#3e558c;
-color:white;
-}
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: none;
+      background: #1e3a5c;
+      color: white;
+    }
 
-button{
-padding:10px 15px;
-border:none;
-border-radius:5px;
-background:#ffd800;
-cursor:pointer;
-}
+    button {
+      padding: 12px;
+      margin: 10px 5px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
 
-.rulesBtn{
-margin-top:15px;
-background:#3e558c;
-color:white;
-}
-
-.footerBtns{
-margin-top:40px;
-display:flex;
-justify-content:space-around;
-}
-
-.footerBtns button{
-background:#3e558c;
-color:white;
-}
-
-#app{display:none;height:100vh;flex-direction:column;}
-
-.top{
-display:flex;
-justify-content:space-between;
-padding:10px;
-background:#2e2e80;
-}
-
-.coin{
-background:gold;
-color:black;
-padding:5px 15px;
-border-radius:20px;
-}
-
-#main{display:flex;height:calc(100vh - 60px);}
-
-#videoSide{
-width:60%;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-gap:20px;
-}
-
-.videoBox{
-width:280px;
-height:280px;
-background:black;
-border-radius:10px;
-position:relative;
-}
-
-video{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-.deviceUI{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-background:rgba(0,0,0,0.6);
-padding:10px;
-border-radius:10px;
-text-align:center;
-}
-
-#chatSide{
-width:40%;
-background:#ddd;
-color:black;
-display:flex;
-flex-direction:column;
-}
-
-#chat{flex:1;padding:10px;}
-
-.chatInput{display:flex;}
-
-.chatInput input{
-flex:1;
-padding:10px;
-}
-
-.sendBtn{
-background:red;
-color:white;
-}
-
-.popup{
-display:none;
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-background:#eee;
-color:black;
-padding:20px;
-border-radius:10px;
-z-index:200;
-width:250px;
-text-align:center;
-}
-
-.popup h3{
-background:yellow;
-padding:5px;
-}
-
-.popup button{
-display:block;
-margin:10px auto;
-background:#3e558c;
-color:white;
-width:100%;
-}
-
-.genderBox{
-margin-top:10px;
-text-align:center;
-}
-.genderBox button{
-background:#3e558c;
-color:white;
-margin:3px;
-transition:0.3s;
-}
-
-.genderBox button.active{
-background:#00ffcc !important;
-color:black;
-transform:scale(1.1);
-box-shadow:0 0 10px #00ffcc;
-}
-</style>
+    .enter {
+      background: #e83333;
+      color: white;
+      width: 100%;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- SAME HTML (NO CHANGE) -->
+<div class="box">
+  <h1 style="color:#ff3b3b;">ZUNO</h1>
 
-<script src="/socket.io/socket.io.js"></script>
+  <input id="name" placeholder="Your Name">
+  <input id="age" placeholder="Your Age">
 
-<script>
-let stream;
-let socket=null;
-let history=[];
-let premium=false;
-let selectedGender="all";
+  <div>
+    <button onclick="setGender('boy')">Boy</button>
+    <button onclick="setGender('girl')">Girl</button>
+    <button onclick="setGender('other')">Other</button>
+  </div>
 
-/* 🔥 ===== WEBRTC ADD (ONLY ADD) ===== */
-let pc=null;
-const config={iceServers:[{urls:"stun:stun.l.google.com:19302"}]};
+  <button class="enter" onclick="enter()">ENTER</button>
+</div>
 
-function createPeer(){
-pc=new RTCPeerConnection(config);
-
-pc.onicecandidate=e=>{
-if(e.candidate){
-socket.emit("candidate",e.candidate);
-}
-};
-
-pc.ontrack=e=>{
-document.getElementById("stranger").srcObject=e.streams[0];
-};
-
-if(stream){
-stream.getTracks().forEach(track=>{
-pc.addTrack(track,stream);
-});
-}
-}
-/* 🔥 ===== END ADD ===== */
-
-/* ORIGINAL CODE CONTINUE */
-
-function setGender(g){
-if((g==="boy" || g==="girl") && !premium){
-alert("Buy premium");
-return;
-}
-selectedGender=g;
-
-document.querySelectorAll(".genderBox button").forEach(btn=>{
-btn.classList.remove("active");
-});
-
-if(g==="all") document.getElementById("allBtn").classList.add("active");
-if(g==="boy") document.getElementById("boyBtn").classList.add("active");
-if(g==="girl") document.getElementById("girlBtn").classList.add("active");
-}
-
-function login(){
-let name=document.getElementById("name").value.trim();
-let age=parseInt(document.getElementById("age").value);
-
-if(!name || isNaN(age)){alert("Fill all");return;}
-if(age<18){alert("18+ only");return;}
-
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="flex";
-document.getElementById("coins").innerText=200;
-
-if(typeof io!=="undefined"){
-socket=io("https://zuno-app.onrender.com");
-
-/* 🔥 ADD */
-socket.on("offer",async data=>{
-createPeer();
-await pc.setRemoteDescription(data);
-let ans=await pc.createAnswer();
-await pc.setLocalDescription(ans);
-socket.emit("answer",ans);
-});
-
-socket.on("answer",async data=>{
-if(pc) await pc.setRemoteDescription(data);
-});
-
-socket.on("candidate",async data=>{
-if(pc) await pc.addIceCandidate(data);
-});
-/* 🔥 END */
-}
-}
-
-function buy(cost,h){
-if(parseInt(coins.innerText)<cost){alert("No coins");return;}
-coins.innerText=parseInt(coins.innerText)-cost;
-premium=true;
-
-document.getElementById("boyBtn").innerText="BOY";
-document.getElementById("girlBtn").innerText="GIRL";
-
-alert("Premium unlocked");
-}
-
-async function start(){
-if(!stream){
-stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-me.srcObject=stream;
-deviceUI.style.display="none";
-}
-
-/* 🔥 ADD */
-createPeer();
-let offer=await pc.createOffer();
-await pc.setLocalDescription(offer);
-socket.emit("offer",offer);
-/* 🔥 END */
-
-if(socket) socket.emit("start",{gender:selectedGender});
-}
-
-function next(){
-if(socket) socket.emit("next",{gender:selectedGender});
-}
-
-function end(){
-
-/* 🔥 ADD */
-if(pc){
-pc.close();
-pc=null;
-}
-document.getElementById("stranger").srcObject=null;
-/* 🔥 END */
-
-if(stream){
-stream.getTracks().forEach(t=>t.stop());
-stream=null;
-me.srcObject=null;
-}
-
-deviceUI.style.display="block";
-if(socket) socket.emit("end");
-}
-
-/* REST SAME */
-function watchAd(){
-window.open("https://www.profitableratecpm.com/");
-setTimeout(()=>{coins.innerText=parseInt(coins.innerText)+20;},3000);
-}
-
-function send(){
-if(!msg.value)return;
-let text="You: "+msg.value;
-history.push(text);
-let d=document.createElement("div");
-d.innerText=text;
-chat.appendChild(d);
-msg.value="";
-}
-
-function openRules(){rulesModal.style.display="block";}
-function closeRules(){rulesModal.style.display="none";}
-function openTerms(){alert("Terms");}
-function openPolicy(){alert("Policy");}
-function openPrivacy(){alert("Privacy");}
-function openAge(){alert("18+ only");}
-
-navigator.mediaDevices.enumerateDevices().then(d=>{
-d.forEach(x=>{
-let o=document.createElement("option");
-o.value=x.deviceId;
-o.text=x.label||x.kind;
-if(x.kind==="videoinput")cameraSelect.appendChild(o);
-if(x.kind==="audioinput")micSelect.appendChild(o);
-});
-});
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
