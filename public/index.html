@@ -129,7 +129,6 @@ background:red;
 color:white;
 }
 
-/* POPUPS */
 .popup{
 display:none;
 position:fixed;
@@ -158,7 +157,7 @@ color:white;
 width:100%;
 }
 
-/* 🔥 ADDED GENDER UI */
+/* 🔥 GENDER */
 .genderBox{
 margin-top:10px;
 text-align:center;
@@ -259,11 +258,11 @@ margin:3px;
 <button onclick="end()">End</button>
 </div>
 
-<!-- 🔥 ADDED GENDER -->
+<!-- 🔥 GENDER -->
 <div class="genderBox">
 <button onclick="setGender('all')">ALL</button>
-<button onclick="setGender('boy')">BOY 🔒</button>
-<button onclick="setGender('girl')">GIRL 🔒</button>
+<button id="boyBtn" onclick="setGender('boy')">BOY 🔒</button>
+<button id="girlBtn" onclick="setGender('girl')">GIRL 🔒</button>
 </div>
 
 </div>
@@ -288,14 +287,13 @@ margin:3px;
 let stream;
 let socket=null;
 let history=[];
-
-/* 🔥 ADDED */
+let premium=false;
 let selectedGender="all";
 
-/* 🔥 GENDER */
+/* GENDER */
 function setGender(g){
-if(g==="boy" || g==="girl"){
-alert("Premium required");
+if((g==="boy" || g==="girl") && !premium){
+alert("Buy premium");
 return;
 }
 selectedGender=g;
@@ -303,61 +301,43 @@ selectedGender=g;
 
 /* LOGIN */
 function login(){
-try{
-
 let name=document.getElementById("name").value.trim();
 let age=parseInt(document.getElementById("age").value);
 
-if(!name || isNaN(age)){
-alert("Fill all");
-return;
-}
-
-if(age<18){
-alert("18+ only");
-return;
-}
+if(!name || isNaN(age)){alert("Fill all");return;}
+if(age<18){alert("18+ only");return;}
 
 document.getElementById("login").style.display="none";
 document.getElementById("app").style.display="flex";
 
 document.getElementById("coins").innerText=200;
 
-if(typeof io !== "undefined"){
+if(typeof io!=="undefined"){
 socket=io("https://zuno-app.onrender.com");
 }
-
-}catch(e){
-console.log(e);
 }
-}
-
-/* RULES */
-function openRules(){rulesModal.style.display="block";}
-function closeRules(){rulesModal.style.display="none";}
-
-/* POPUPS */
-function openHistory(){
-historyPopup.style.display="block";
-historyBox.innerHTML=history.join("<br>");
-}
-function closeHistory(){historyPopup.style.display="none";}
-
-function openReport(){reportPopup.style.display="block";}
-function closeReport(){reportPopup.style.display="none";}
-
-function openPremium(){premiumPopup.style.display="block";}
-function closePremium(){premiumPopup.style.display="none";}
 
 /* PREMIUM */
 function buy(cost,h){
 if(parseInt(coins.innerText)<cost){alert("No coins");return;}
+
 coins.innerText=parseInt(coins.innerText)-cost;
-alert("Premium "+h+" hours activated");
+premium=true;
+
+/* 🔥 UNLOCK */
+document.getElementById("boyBtn").innerText="BOY";
+document.getElementById("girlBtn").innerText="GIRL";
+
+alert("Premium unlocked");
 }
 
-/* REPORT */
-function report(t){alert("Reported "+t);}
+/* POPUPS */
+function openHistory(){historyPopup.style.display="block";historyBox.innerHTML=history.join("<br>");}
+function closeHistory(){historyPopup.style.display="none";}
+function openReport(){reportPopup.style.display="block";}
+function closeReport(){reportPopup.style.display="none";}
+function openPremium(){premiumPopup.style.display="block";}
+function closePremium(){premiumPopup.style.display="none";}
 
 /* CAMERA */
 async function start(){
@@ -366,25 +346,13 @@ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
 me.srcObject=stream;
 deviceUI.style.display="none";
 }
-if(socket) socket.emit("start");
+if(socket) socket.emit("start",{gender:selectedGender});
 }
 
-/* 🔥 UPDATED NEXT */
-const oldNext = next;
 function next(){
-let coinVal=parseInt(document.getElementById("coins").innerText);
-
-if(coinVal < 2){
-alert("Not enough coins");
-return;
+if(socket) socket.emit("next",{gender:selectedGender});
 }
 
-document.getElementById("coins").innerText = coinVal - 2;
-
-if(socket) socket.emit("next");
-}
-
-/* END */
 function end(){
 if(stream){
 stream.getTracks().forEach(t=>t.stop());
@@ -413,6 +381,8 @@ msg.value="";
 }
 
 /* EXTRA */
+function openRules(){rulesModal.style.display="block";}
+function closeRules(){rulesModal.style.display="none";}
 function openTerms(){alert("Terms");}
 function openPolicy(){alert("Policy");}
 function openPrivacy(){alert("Privacy");}
