@@ -63,10 +63,7 @@ io.on("connection", (socket) => {
     socket.emit("history", socket.user.history);
   });
 
-  /* 🔥 ========================= */
-  /* 🔥 ADDED WEBRTC SIGNALING */
-  /* 🔥 ========================= */
-
+  /* 🔥 WEBRTC SIGNALING */
   socket.on("offer", (data)=>{
     if(socket.partner){
       socket.partner.emit("offer", data);
@@ -85,7 +82,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  /* 🔥 SAFE DISCONNECT FIX (ADDED) */
   socket.on("disconnect", ()=>{
     if (socket.partner) {
       socket.partner.emit("end");
