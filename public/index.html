@@ -129,6 +129,7 @@ background:red;
 color:white;
 }
 
+/* POPUPS */
 .popup{
 display:none;
 position:fixed;
@@ -166,6 +167,17 @@ text-align:center;
 background:#3e558c;
 color:white;
 margin:3px;
+
+/* ADDED */
+transition:0.3s;
+}
+
+/* ACTIVE EFFECT */
+.genderBox button.active{
+background:#00ffcc !important;
+color:black;
+transform:scale(1.1);
+box-shadow:0 0 10px #00ffcc;
 }
 </style>
 </head>
@@ -173,7 +185,6 @@ margin:3px;
 <body>
 
 <div id="login">
-
 <h1>ZUNO</h1>
 
 <input id="name" placeholder="NAME" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')"><br>
@@ -190,9 +201,9 @@ margin:3px;
 <button onclick="openPrivacy()">PRIVACY</button>
 <button onclick="openAge()">AGE</button>
 </div>
-
 </div>
 
+<!-- POPUPS -->
 <div id="rulesModal" class="popup">
 <h3>RULES</h3>
 <p>18+ only<br>No nudity<br>No abuse<br>Be respectful</p>
@@ -239,13 +250,11 @@ margin:3px;
 
 <div class="videoBox">
 <video id="me" autoplay muted></video>
-
 <div id="deviceUI" class="deviceUI">
 <button onclick="flipCamera()">Flip Camera</button><br>
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
-
 </div>
 
 <div class="videoBox">
@@ -258,9 +267,9 @@ margin:3px;
 <button onclick="end()">End</button>
 </div>
 
-<!-- 🔥 GENDER -->
+<!-- GENDER -->
 <div class="genderBox">
-<button onclick="setGender('all')">ALL</button>
+<button onclick="setGender('all')" id="allBtn">ALL</button>
 <button id="boyBtn" onclick="setGender('boy')">BOY 🔒</button>
 <button id="girlBtn" onclick="setGender('girl')">GIRL 🔒</button>
 </div>
@@ -268,14 +277,11 @@ margin:3px;
 </div>
 
 <div id="chatSide">
-
 <div id="chat"></div>
-
 <div class="chatInput">
 <input id="msg" placeholder="TYPE">
 <button class="sendBtn" onclick="send()">SEND</button>
 </div>
-
 </div>
 
 </div>
@@ -290,13 +296,25 @@ let history=[];
 let premium=false;
 let selectedGender="all";
 
-/* GENDER */
+/* 🔥 FIXED + ANIMATION */
 function setGender(g){
+
 if((g==="boy" || g==="girl") && !premium){
 alert("Buy premium");
 return;
 }
+
 selectedGender=g;
+
+/* animation */
+document.querySelectorAll(".genderBox button").forEach(btn=>{
+btn.classList.remove("active");
+});
+
+if(g==="all") document.getElementById("allBtn").classList.add("active");
+if(g==="boy") document.getElementById("boyBtn").classList.add("active");
+if(g==="girl") document.getElementById("girlBtn").classList.add("active");
+
 }
 
 /* LOGIN */
@@ -324,14 +342,13 @@ if(parseInt(coins.innerText)<cost){alert("No coins");return;}
 coins.innerText=parseInt(coins.innerText)-cost;
 premium=true;
 
-/* 🔥 UNLOCK */
 document.getElementById("boyBtn").innerText="BOY";
 document.getElementById("girlBtn").innerText="GIRL";
 
 alert("Premium unlocked");
 }
 
-/* POPUPS */
+/* REST SAME */
 function openHistory(){historyPopup.style.display="block";historyBox.innerHTML=history.join("<br>");}
 function closeHistory(){historyPopup.style.display="none";}
 function openReport(){reportPopup.style.display="block";}
@@ -339,7 +356,6 @@ function closeReport(){reportPopup.style.display="none";}
 function openPremium(){premiumPopup.style.display="block";}
 function closePremium(){premiumPopup.style.display="none";}
 
-/* CAMERA */
 async function start(){
 if(!stream){
 stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
@@ -363,13 +379,11 @@ deviceUI.style.display="block";
 if(socket) socket.emit("end");
 }
 
-/* ADS */
 function watchAd(){
 window.open("https://www.profitableratecpm.com/");
 setTimeout(()=>{coins.innerText=parseInt(coins.innerText)+20;},3000);
 }
 
-/* CHAT */
 function send(){
 if(!msg.value)return;
 let text="You: "+msg.value;
@@ -380,7 +394,6 @@ chat.appendChild(d);
 msg.value="";
 }
 
-/* EXTRA */
 function openRules(){rulesModal.style.display="block";}
 function closeRules(){rulesModal.style.display="none";}
 function openTerms(){alert("Terms");}
@@ -388,7 +401,6 @@ function openPolicy(){alert("Policy");}
 function openPrivacy(){alert("Privacy");}
 function openAge(){alert("18+ only");}
 
-/* DEVICES */
 navigator.mediaDevices.enumerateDevices().then(d=>{
 d.forEach(x=>{
 let o=document.createElement("option");
