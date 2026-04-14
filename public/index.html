@@ -129,18 +129,33 @@ background:red;
 color:white;
 }
 
-.modal{
+/* 🔥 POPUPS */
+.popup{
 display:none;
 position:fixed;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-background:white;
+background:#eee;
 color:black;
 padding:20px;
 border-radius:10px;
-z-index:100;
-width:300px;
+z-index:200;
+width:250px;
+text-align:center;
+}
+
+.popup h3{
+background:yellow;
+padding:5px;
+}
+
+.popup button{
+display:block;
+margin:10px auto;
+background:#3e558c;
+color:white;
+width:100%;
 }
 </style>
 </head>
@@ -151,7 +166,6 @@ width:300px;
 
 <h1>ZUNO</h1>
 
-<!-- 🔥 FIXED INPUT -->
 <input id="name" placeholder="NAME" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')"><br>
 <input id="age" placeholder="AGE" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><br>
 
@@ -169,10 +183,35 @@ width:300px;
 
 </div>
 
-<div id="rulesModal" class="modal">
+<div id="rulesModal" class="popup">
 <h3>RULES</h3>
 <p>18+ only<br>No nudity<br>No abuse<br>Be respectful</p>
-<button onclick="closeRules()">OK</button>
+<button onclick="closeRules()">Close</button>
+</div>
+
+<!-- 🔥 HISTORY -->
+<div id="historyPopup" class="popup">
+<h3>HISTORY</h3>
+<div id="historyBox"></div>
+<button onclick="closeHistory()">Close</button>
+</div>
+
+<!-- 🔥 REPORT -->
+<div id="reportPopup" class="popup">
+<h3>REPORT</h3>
+<button onclick="report('Abuse')">ABUSE</button>
+<button onclick="report('Nudity')">NUDITY</button>
+<button onclick="report('Violence')">VIOLENCE</button>
+<button onclick="closeReport()">Close</button>
+</div>
+
+<!-- 🔥 PREMIUM -->
+<div id="premiumPopup" class="popup">
+<h3>PREMIUM</h3>
+<button onclick="buy(200,2)">PLATINUM 200</button>
+<button onclick="buy(500,10)">GOLD 500</button>
+<button onclick="buy(1000,24)">DIAMOND 1000</button>
+<button onclick="closePremium()">Close</button>
 </div>
 
 <div id="app">
@@ -235,25 +274,17 @@ let stream;
 let socket;
 let history=[];
 
-/* 🔥 FIXED LOGIN */
 function login(){
 let name=document.getElementById("name").value.trim();
 let age=parseInt(document.getElementById("age").value);
 
-if(!name || !age){
-alert("Fill all fields");
-return;
-}
+if(!name || !age){alert("Fill all");return;}
+if(age<18){alert("18+ only");return;}
 
-if(age<18){
-alert("18+ only");
-return;
-}
+login.style.display="none";
+app.style.display="flex";
 
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="flex";
-
-document.getElementById("coins").innerText=200;
+coins.innerText=200;
 
 socket=io("https://zuno-app.onrender.com");
 }
@@ -262,7 +293,30 @@ socket=io("https://zuno-app.onrender.com");
 function openRules(){rulesModal.style.display="block";}
 function closeRules(){rulesModal.style.display="none";}
 
-/* START */
+/* POPUPS */
+function openHistory(){
+historyPopup.style.display="block";
+historyBox.innerHTML=history.join("<br>");
+}
+function closeHistory(){historyPopup.style.display="none";}
+
+function openReport(){reportPopup.style.display="block";}
+function closeReport(){reportPopup.style.display="none";}
+
+function openPremium(){premiumPopup.style.display="block";}
+function closePremium(){premiumPopup.style.display="none";}
+
+/* PREMIUM */
+function buy(cost,h){
+if(parseInt(coins.innerText)<cost){alert("No coins");return;}
+coins.innerText=parseInt(coins.innerText)-cost;
+alert("Premium "+h+" hours activated");
+}
+
+/* REPORT */
+function report(t){alert("Reported "+t);}
+
+/* CAMERA */
 async function start(){
 if(!stream){
 stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
@@ -272,10 +326,8 @@ deviceUI.style.display="none";
 socket.emit("start");
 }
 
-/* NEXT */
 function next(){socket.emit("next");}
 
-/* END */
 function end(){
 if(stream){
 stream.getTracks().forEach(t=>t.stop());
@@ -304,9 +356,6 @@ msg.value="";
 }
 
 /* EXTRA */
-function openPremium(){alert("Premium");}
-function openReport(){alert("Report");}
-function openHistory(){alert("History");}
 function openTerms(){alert("Terms");}
 function openPolicy(){alert("Policy");}
 function openPrivacy(){alert("Privacy");}
