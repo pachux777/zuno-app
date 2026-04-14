@@ -157,6 +157,17 @@ background:#3e558c;
 color:white;
 width:100%;
 }
+
+/* 🔥 ADDED GENDER UI */
+.genderBox{
+margin-top:10px;
+text-align:center;
+}
+.genderBox button{
+background:#3e558c;
+color:white;
+margin:3px;
+}
 </style>
 </head>
 
@@ -248,6 +259,13 @@ width:100%;
 <button onclick="end()">End</button>
 </div>
 
+<!-- 🔥 ADDED GENDER -->
+<div class="genderBox">
+<button onclick="setGender('all')">ALL</button>
+<button onclick="setGender('boy')">BOY 🔒</button>
+<button onclick="setGender('girl')">GIRL 🔒</button>
+</div>
+
 </div>
 
 <div id="chatSide">
@@ -268,15 +286,29 @@ width:100%;
 
 <script>
 let stream;
-let socket;
+let socket=null;
 let history=[];
 
-/* 🔥 FIXED LOGIN */
+/* 🔥 ADDED */
+let selectedGender="all";
+
+/* 🔥 GENDER */
+function setGender(g){
+if(g==="boy" || g==="girl"){
+alert("Premium required");
+return;
+}
+selectedGender=g;
+}
+
+/* LOGIN */
 function login(){
+try{
+
 let name=document.getElementById("name").value.trim();
 let age=parseInt(document.getElementById("age").value);
 
-if(!name || !age){
+if(!name || isNaN(age)){
 alert("Fill all");
 return;
 }
@@ -286,13 +318,18 @@ alert("18+ only");
 return;
 }
 
-/* 🔥 FIXED THIS */
 document.getElementById("login").style.display="none";
 document.getElementById("app").style.display="flex";
 
 document.getElementById("coins").innerText=200;
 
+if(typeof io !== "undefined"){
 socket=io("https://zuno-app.onrender.com");
+}
+
+}catch(e){
+console.log(e);
+}
 }
 
 /* RULES */
@@ -329,11 +366,25 @@ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
 me.srcObject=stream;
 deviceUI.style.display="none";
 }
-socket.emit("start");
+if(socket) socket.emit("start");
 }
 
-function next(){socket.emit("next");}
+/* 🔥 UPDATED NEXT */
+const oldNext = next;
+function next(){
+let coinVal=parseInt(document.getElementById("coins").innerText);
 
+if(coinVal < 2){
+alert("Not enough coins");
+return;
+}
+
+document.getElementById("coins").innerText = coinVal - 2;
+
+if(socket) socket.emit("next");
+}
+
+/* END */
 function end(){
 if(stream){
 stream.getTracks().forEach(t=>t.stop());
@@ -341,7 +392,7 @@ stream=null;
 me.srcObject=null;
 }
 deviceUI.style.display="block";
-socket.emit("end");
+if(socket) socket.emit("end");
 }
 
 /* ADS */
