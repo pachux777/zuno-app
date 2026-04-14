@@ -13,11 +13,7 @@ color:white;
 overflow:hidden;
 }
 
-/* LOGIN */
-#login{
-text-align:center;
-margin-top:80px;
-}
+#login{text-align:center;margin-top:80px;}
 
 #login h1{
 color:red;
@@ -34,7 +30,6 @@ background:#3e558c;
 color:white;
 }
 
-/* BUTTON */
 button{
 padding:10px 15px;
 border:none;
@@ -43,14 +38,12 @@ background:#ffd800;
 cursor:pointer;
 }
 
-/* RULE BUTTON */
 .rulesBtn{
 margin-top:15px;
 background:#3e558c;
 color:white;
 }
 
-/* FOOT BUTTONS */
 .footerBtns{
 margin-top:40px;
 display:flex;
@@ -62,7 +55,6 @@ background:#3e558c;
 color:white;
 }
 
-/* APP */
 #app{display:none;height:100vh;flex-direction:column;}
 
 .top{
@@ -79,10 +71,8 @@ padding:5px 15px;
 border-radius:20px;
 }
 
-/* MAIN */
 #main{display:flex;height:calc(100vh - 60px);}
 
-/* LEFT */
 #videoSide{
 width:60%;
 display:flex;
@@ -106,7 +96,6 @@ height:100%;
 object-fit:cover;
 }
 
-/* CAMERA UI */
 .deviceUI{
 position:absolute;
 top:50%;
@@ -118,7 +107,6 @@ border-radius:10px;
 text-align:center;
 }
 
-/* CHAT */
 #chatSide{
 width:40%;
 background:#ddd;
@@ -127,14 +115,9 @@ display:flex;
 flex-direction:column;
 }
 
-#chat{
-flex:1;
-padding:10px;
-}
+#chat{flex:1;padding:10px;}
 
-.chatInput{
-display:flex;
-}
+.chatInput{display:flex;}
 
 .chatInput input{
 flex:1;
@@ -146,7 +129,6 @@ background:red;
 color:white;
 }
 
-/* MODAL */
 .modal{
 display:none;
 position:fixed;
@@ -165,13 +147,13 @@ width:300px;
 
 <body>
 
-<!-- LOGIN -->
 <div id="login">
 
 <h1>ZUNO</h1>
 
-<input id="name" placeholder="NAME"><br>
-<input id="age" placeholder="AGE"><br>
+<!-- 🔥 FIXED INPUT -->
+<input id="name" placeholder="NAME" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')"><br>
+<input id="age" placeholder="AGE" oninput="this.value=this.value.replace(/[^0-9]/g,'')"><br>
 
 <button onclick="login()">ENTER</button>
 
@@ -187,14 +169,12 @@ width:300px;
 
 </div>
 
-<!-- RULES -->
 <div id="rulesModal" class="modal">
 <h3>RULES</h3>
 <p>18+ only<br>No nudity<br>No abuse<br>Be respectful</p>
 <button onclick="closeRules()">OK</button>
 </div>
 
-<!-- APP -->
 <div id="app">
 
 <div class="top">
@@ -255,18 +235,25 @@ let stream;
 let socket;
 let history=[];
 
-/* LOGIN */
+/* 🔥 FIXED LOGIN */
 function login(){
-let name=document.getElementById("name").value;
-let age=document.getElementById("age").value;
+let name=document.getElementById("name").value.trim();
+let age=parseInt(document.getElementById("age").value);
 
-if(!name || !age){alert("Fill all");return;}
-if(age<18){alert("18+ only");return;}
+if(!name || !age){
+alert("Fill all fields");
+return;
+}
 
-login.style.display="none";
-app.style.display="flex";
+if(age<18){
+alert("18+ only");
+return;
+}
 
-coins.innerText=200;
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="flex";
+
+document.getElementById("coins").innerText=200;
 
 socket=io("https://zuno-app.onrender.com");
 }
@@ -286,9 +273,7 @@ socket.emit("start");
 }
 
 /* NEXT */
-function next(){
-socket.emit("next");
-}
+function next(){socket.emit("next");}
 
 /* END */
 function end(){
