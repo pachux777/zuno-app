@@ -6,180 +6,204 @@
 
 <style>
 body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#000,#0f2027,#203a43);
-  color:white;
-  overflow:hidden;
+margin:0;
+font-family:Arial;
+background:#0d2b45;
+color:white;
+overflow:hidden;
 }
 
 /* LOGIN */
-#login{text-align:center;margin-top:100px;}
+#login{
+text-align:center;
+margin-top:80px;
+}
+
+#login h1{
+color:red;
+font-size:50px;
+}
 
 input{
-  padding:12px;
-  width:250px;
-  margin:10px;
-  border-radius:10px;
-  border:none;
+padding:12px;
+width:260px;
+margin:10px;
+border-radius:5px;
+border:none;
+background:#3e558c;
+color:white;
+}
+
+/* BUTTON */
+button{
+padding:10px 15px;
+border:none;
+border-radius:5px;
+background:#ffd800;
+cursor:pointer;
+}
+
+/* RULE BUTTON */
+.rulesBtn{
+margin-top:15px;
+background:#3e558c;
+color:white;
+}
+
+/* FOOT BUTTONS */
+.footerBtns{
+margin-top:40px;
+display:flex;
+justify-content:space-around;
+}
+
+.footerBtns button{
+background:#3e558c;
+color:white;
 }
 
 /* APP */
 #app{display:none;height:100vh;flex-direction:column;}
 
 .top{
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  background:#111;
+display:flex;
+justify-content:space-between;
+padding:10px;
+background:#2e2e80;
 }
 
 .coin{
-  background:gold;
-  color:black;
-  padding:5px 15px;
-  border-radius:20px;
+background:gold;
+color:black;
+padding:5px 15px;
+border-radius:20px;
 }
 
 /* MAIN */
 #main{display:flex;height:calc(100vh - 60px);}
 
+/* LEFT */
 #videoSide{
-  width:60%;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:15px;
+width:60%;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:20px;
 }
 
 .videoBox{
-  width:260px;
-  height:260px;
-  background:black;
-  border-radius:20px;
-  overflow:hidden;
-  position:relative;
+width:280px;
+height:280px;
+background:black;
+border-radius:10px;
+position:relative;
 }
 
 video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+width:100%;
+height:100%;
+object-fit:cover;
 }
 
+/* CAMERA UI */
 .deviceUI{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:rgba(0,0,0,0.6);
-  padding:8px;
-  border-radius:10px;
-  text-align:center;
-}
-
-/* BUTTONS */
-.controls{
-  display:flex;
-  gap:10px;
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:rgba(0,0,0,0.6);
+padding:10px;
+border-radius:10px;
+text-align:center;
 }
 
 /* CHAT */
 #chatSide{
-  width:40%;
-  background:#111;
-  display:flex;
-  flex-direction:column;
+width:40%;
+background:#ddd;
+color:black;
+display:flex;
+flex-direction:column;
 }
 
-#statusText{padding:10px;color:yellow;}
-#chat{flex:1;padding:10px;overflow:auto;}
-
-.chatInput{display:flex;padding:10px;}
-
-button{
-  padding:8px 12px;
-  border:none;
-  border-radius:10px;
-  background:cyan;
-  cursor:pointer;
+#chat{
+flex:1;
+padding:10px;
 }
 
-/* MODALS */
+.chatInput{
+display:flex;
+}
+
+.chatInput input{
+flex:1;
+padding:10px;
+}
+
+.sendBtn{
+background:red;
+color:white;
+}
+
+/* MODAL */
 .modal{
-  display:none;
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#222;
-  padding:20px;
-  border-radius:10px;
-  z-index:100;
-}
-.close{
-  position:absolute;
-  right:10px;
-  top:5px;
-  color:red;
-  cursor:pointer;
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:white;
+color:black;
+padding:20px;
+border-radius:10px;
+z-index:100;
+width:300px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="login">
+
 <h1>ZUNO</h1>
-<input id="name" placeholder="Name"><br>
-<input id="age" type="number" placeholder="Age"><br>
-<button onclick="login()">Enter</button><br>
 
-<!-- 🔥 ADDED TERMS BUTTON -->
-<button onclick="openTerms()">Terms</button>
+<input id="name" placeholder="NAME"><br>
+<input id="age" placeholder="AGE"><br>
+
+<button onclick="login()">ENTER</button>
+
+<br>
+<button class="rulesBtn" onclick="openRules()">RULES</button>
+
+<div class="footerBtns">
+<button onclick="openTerms()">TERMS</button>
+<button onclick="openPolicy()">POLICY</button>
+<button onclick="openPrivacy()">PRIVACY</button>
+<button onclick="openAge()">AGE</button>
 </div>
 
-<!-- 🔥 TERMS MODAL -->
-<div id="termsModal" class="modal">
-<span class="close" onclick="closeTerms()">❌</span>
-<p>18+ only. No abuse, no nudity, be respectful.</p>
 </div>
 
-<!-- PREMIUM -->
-<div id="premiumModal" class="modal">
-<span class="close" onclick="closePremium()">❌</span>
-<h3>Premium</h3>
-<button onclick="buy(200,2)">Platinum (2h)</button><br>
-<button onclick="buy(500,10)">Gold (10h)</button><br>
-<button onclick="buy(1000,24)">Diamond (24h)</button>
+<!-- RULES -->
+<div id="rulesModal" class="modal">
+<h3>RULES</h3>
+<p>18+ only<br>No nudity<br>No abuse<br>Be respectful</p>
+<button onclick="closeRules()">OK</button>
 </div>
 
-<!-- REPORT -->
-<div id="reportModal" class="modal">
-<span class="close" onclick="closeReport()">❌</span>
-<h3>Report</h3>
-<button onclick="report('Abuse')">Abuse</button><br>
-<button onclick="report('Violence')">Violence</button><br>
-<button onclick="report('Nude')">Nude</button>
-</div>
-
-<!-- HISTORY -->
-<div id="historyModal" class="modal">
-<span class="close" onclick="closeHistory()">❌</span>
-<h3>History</h3>
-<div id="historyBox"></div>
-</div>
-
+<!-- APP -->
 <div id="app">
 
 <div class="top">
-<button onclick="watchAd()">Ads</button>
-<div class="coin">🪙 <span id="coins">20</span></div>
+<button onclick="watchAd()">ADS</button>
+<div class="coin">COINS: <span id="coins">20</span></div>
 <div>
-<button onclick="openPremium()">Premium</button>
-<button onclick="openReport()">Report</button>
-<button onclick="openHistory()">History</button>
+<button onclick="openPremium()">PREMIUM</button>
+<button onclick="openHistory()">HISTORY</button>
+<button onclick="openReport()">REPORT</button>
 </div>
 </div>
 
@@ -188,35 +212,37 @@ button{
 <div id="videoSide">
 
 <div class="videoBox">
-<video id="me" autoplay muted playsinline></video>
+<video id="me" autoplay muted></video>
 
 <div id="deviceUI" class="deviceUI">
-<button onclick="flipCamera()">Flip</button><br>
+<button onclick="flipCamera()">Flip Camera</button><br>
 <select id="cameraSelect"></select><br>
 <select id="micSelect"></select>
 </div>
+
 </div>
 
 <div class="videoBox">
-<video id="stranger" autoplay playsinline></video>
+<video id="stranger" autoplay></video>
 </div>
 
-<div class="controls">
+<div>
 <button onclick="start()">Start</button>
-<button onclick="next()">Next (-2)</button>
+<button onclick="next()">Next</button>
 <button onclick="end()">End</button>
 </div>
 
 </div>
 
 <div id="chatSide">
-<div id="statusText">Ready</div>
+
 <div id="chat"></div>
 
 <div class="chatInput">
-<input id="msg">
-<button onclick="send()">Send</button>
+<input id="msg" placeholder="TYPE">
+<button class="sendBtn" onclick="send()">SEND</button>
 </div>
+
 </div>
 
 </div>
@@ -229,32 +255,25 @@ let stream;
 let socket;
 let history=[];
 
-/* 🔥 FIXED LOGIN */
+/* LOGIN */
 function login(){
-let ageVal = document.getElementById("age").value;
-let nameVal = document.getElementById("name").value;
+let name=document.getElementById("name").value;
+let age=document.getElementById("age").value;
 
-if(!nameVal || !ageVal){
-alert("Enter name and age");
-return;
-}
+if(!name || !age){alert("Fill all");return;}
+if(age<18){alert("18+ only");return;}
 
-if(parseInt(ageVal) < 18){
-alert("18+ only");
-return;
-}
+login.style.display="none";
+app.style.display="flex";
 
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="flex";
-
-document.getElementById("coins").innerText=200;
+coins.innerText=200;
 
 socket=io("https://zuno-app.onrender.com");
 }
 
-/* 🔥 TERMS */
-function openTerms(){termsModal.style.display="block";}
-function closeTerms(){termsModal.style.display="none";}
+/* RULES */
+function openRules(){rulesModal.style.display="block";}
+function closeRules(){rulesModal.style.display="none";}
 
 /* START */
 async function start(){
@@ -268,8 +287,6 @@ socket.emit("start");
 
 /* NEXT */
 function next(){
-if(parseInt(coins.innerText)<2){alert("Need coins");return;}
-coins.innerText=parseInt(coins.innerText)-2;
 socket.emit("next");
 }
 
@@ -287,31 +304,8 @@ socket.emit("end");
 /* ADS */
 function watchAd(){
 window.open("https://www.profitableratecpm.com/");
-setTimeout(()=>{
-coins.innerText=parseInt(coins.innerText)+20;
-},3000);
+setTimeout(()=>{coins.innerText=parseInt(coins.innerText)+20;},3000);
 }
-
-/* PREMIUM */
-function openPremium(){premiumModal.style.display="block";}
-function closePremium(){premiumModal.style.display="none";}
-function buy(cost,h){
-if(parseInt(coins.innerText)<cost){alert("No coins");return;}
-coins.innerText=parseInt(coins.innerText)-cost;
-alert("Premium "+h+" hours activated");
-}
-
-/* REPORT */
-function openReport(){reportModal.style.display="block";}
-function closeReport(){reportModal.style.display="none";}
-function report(t){alert("Reported "+t);}
-
-/* HISTORY */
-function openHistory(){
-historyModal.style.display="block";
-historyBox.innerHTML=history.join("<br>");
-}
-function closeHistory(){historyModal.style.display="none";}
 
 /* CHAT */
 function send(){
@@ -323,6 +317,15 @@ d.innerText=text;
 chat.appendChild(d);
 msg.value="";
 }
+
+/* EXTRA */
+function openPremium(){alert("Premium");}
+function openReport(){alert("Report");}
+function openHistory(){alert("History");}
+function openTerms(){alert("Terms");}
+function openPolicy(){alert("Policy");}
+function openPrivacy(){alert("Privacy");}
+function openAge(){alert("18+ only");}
 
 /* DEVICES */
 navigator.mediaDevices.enumerateDevices().then(d=>{
