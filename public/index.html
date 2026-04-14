@@ -129,7 +129,7 @@ background:red;
 color:white;
 }
 
-/* 🔥 POPUPS */
+/* POPUPS */
 .popup{
 display:none;
 position:fixed;
@@ -189,14 +189,12 @@ width:100%;
 <button onclick="closeRules()">Close</button>
 </div>
 
-<!-- 🔥 HISTORY -->
 <div id="historyPopup" class="popup">
 <h3>HISTORY</h3>
 <div id="historyBox"></div>
 <button onclick="closeHistory()">Close</button>
 </div>
 
-<!-- 🔥 REPORT -->
 <div id="reportPopup" class="popup">
 <h3>REPORT</h3>
 <button onclick="report('Abuse')">ABUSE</button>
@@ -205,7 +203,6 @@ width:100%;
 <button onclick="closeReport()">Close</button>
 </div>
 
-<!-- 🔥 PREMIUM -->
 <div id="premiumPopup" class="popup">
 <h3>PREMIUM</h3>
 <button onclick="buy(200,2)">PLATINUM 200</button>
@@ -274,17 +271,26 @@ let stream;
 let socket;
 let history=[];
 
+/* 🔥 FIXED LOGIN */
 function login(){
 let name=document.getElementById("name").value.trim();
 let age=parseInt(document.getElementById("age").value);
 
-if(!name || !age){alert("Fill all");return;}
-if(age<18){alert("18+ only");return;}
+if(!name || !age){
+alert("Fill all");
+return;
+}
 
-login.style.display="none";
-app.style.display="flex";
+if(age<18){
+alert("18+ only");
+return;
+}
 
-coins.innerText=200;
+/* 🔥 FIXED THIS */
+document.getElementById("login").style.display="none";
+document.getElementById("app").style.display="flex";
+
+document.getElementById("coins").innerText=200;
 
 socket=io("https://zuno-app.onrender.com");
 }
