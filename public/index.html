@@ -5,59 +5,146 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{margin:0;font-family:Arial;background:#0d2b45;color:white;overflow:hidden;}
-#login{text-align:center;margin-top:80px;}
-#login h1{color:red;font-size:50px;}
-input{padding:12px;width:260px;margin:10px;border-radius:5px;border:none;background:#3e558c;color:white;}
-button{padding:10px 15px;border:none;border-radius:5px;background:#ffd800;cursor:pointer;}
-#app{display:none;height:100vh;flex-direction:column;}
-.top{display:flex;justify-content:space-between;padding:10px;background:#2e2e80;}
-.coin{background:gold;color:black;padding:5px 15px;border-radius:20px;}
-#main{display:flex;height:calc(100vh - 60px);}
-#videoSide{width:60%;display:flex;flex-direction:column;align-items:center;gap:20px;}
-.videoBox{width:280px;height:280px;background:black;border-radius:10px;}
-video{width:100%;height:100%;object-fit:cover;}
-#chatSide{width:40%;background:#ddd;color:black;display:flex;flex-direction:column;}
-#chat{flex:1;padding:10px;}
-.chatInput{display:flex;}
-.chatInput input{flex:1;padding:10px;}
-.sendBtn{background:red;color:white;}
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(135deg,#000,#0f2027,#203a43);
+  color:white;
+  overflow:hidden;
+}
+
+/* LOGIN */
+#login{
+  text-align:center;
+  margin-top:120px;
+}
+
+input{
+  padding:12px;
+  width:260px;
+  margin:8px;
+  border-radius:10px;
+  border:none;
+}
+
+/* TOP */
+.top{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  background:#111;
+}
+
+.coin{
+  background:gold;
+  color:black;
+  padding:6px 18px;
+  border-radius:20px;
+}
+
+/* MAIN */
+#app{
+  display:none;
+  height:100vh;
+  flex-direction:column;
+}
+
+#main{
+  flex:1;
+  display:flex;
+}
+
+#videoSide{
+  width:60%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+}
+
+.videoBox{
+  width:300px;
+  height:300px;
+  background:black;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+#chatSide{
+  width:40%;
+  background:#111;
+  display:flex;
+  flex-direction:column;
+}
+
+#chat{
+  flex:1;
+  padding:10px;
+  overflow:auto;
+}
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:cyan;
+}
+
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="login">
 <h1>ZUNO</h1>
-<input id="name" placeholder="NAME"><br>
+<input id="name" placeholder="YOUR NAME"><br>
 <input id="age" placeholder="AGE"><br>
 <button onclick="login()">ENTER</button>
 </div>
 
+<!-- APP -->
 <div id="app">
+
 <div class="top">
 <div>COINS: <span id="coins">100</span></div>
+<div>
+<button onclick="openPremium()">Premium</button>
+<button onclick="loadHistory()">History</button>
+</div>
 </div>
 
 <div id="main">
 
 <div id="videoSide">
+
+<div class="videoBox">
 <video id="me" autoplay muted></video>
+</div>
+
+<div class="videoBox">
 <video id="stranger" autoplay></video>
+</div>
 
 <div>
 <button onclick="start()">START</button>
 <button onclick="next()">NEXT</button>
 <button onclick="end()">END</button>
 </div>
+
 </div>
 
 <div id="chatSide">
 <div id="chat"></div>
-<div class="chatInput">
 <input id="msg">
-<button class="sendBtn" onclick="send()">SEND</button>
-</div>
+<button onclick="send()">SEND</button>
 </div>
 
 </div>
@@ -72,108 +159,113 @@ let peer;
 
 /* LOGIN */
 function login(){
-let age=document.getElementById("age").value;
-if(age<18){alert("18+ only");return;}
+  let age=document.getElementById("age").value;
+  if(age<18){alert("18+ only");return;}
 
-document.getElementById("login").style.display="none";
-document.getElementById("app").style.display="flex";
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="flex";
 
-/* 🔥 YOUR BACKEND */
-socket = io("https://zuno-app-1.onrender.com");
-
-setup();
+  socket = io("https://zuno-app-1.onrender.com");
+  setup();
 }
 
-/* START CAMERA */
+/* START */
 async function start(){
-localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-me.srcObject = localStream;
-socket.emit("start");
+  localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+  me.srcObject = localStream;
+  socket.emit("start");
 }
 
 /* NEXT */
 function next(){
-if(peer) peer.close();
-socket.emit("next");
+  if(peer) peer.close();
+  socket.emit("next");
 }
 
 /* END */
 function end(){
-if(peer) peer.close();
-socket.emit("end");
+  if(peer) peer.close();
+  socket.emit("end");
 }
 
 /* CHAT */
 function send(){
-let msg=document.getElementById("msg").value;
-socket.emit("message",msg);
-addMsg("You: "+msg);
+  let msg=document.getElementById("msg").value;
+  socket.emit("message",msg);
+  addMsg("You: "+msg);
 }
 
 function addMsg(t){
-let d=document.createElement("div");
-d.innerText=t;
-chat.appendChild(d);
+  let d=document.createElement("div");
+  d.innerText=t;
+  chat.appendChild(d);
 }
 
 /* WEBRTC */
 function createPeer(init){
-peer=new RTCPeerConnection({
-iceServers:[
-{urls:"stun:stun.l.google.com:19302"}
-]
-});
+  peer=new RTCPeerConnection({
+    iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+  });
 
-localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
+  localStream.getTracks().forEach(t=>peer.addTrack(t,localStream));
 
-peer.ontrack=e=>stranger.srcObject=e.streams[0];
+  peer.ontrack=e=>stranger.srcObject=e.streams[0];
 
-peer.onicecandidate=e=>{
-if(e.candidate){
-socket.emit("candidate",e.candidate);
-}
-};
+  peer.onicecandidate=e=>{
+    if(e.candidate){
+      socket.emit("candidate",e.candidate);
+    }
+  };
 
-if(init){
-peer.createOffer().then(o=>{
-peer.setLocalDescription(o);
-socket.emit("offer",o);
-});
-}
+  if(init){
+    peer.createOffer().then(o=>{
+      peer.setLocalDescription(o);
+      socket.emit("offer",o);
+    });
+  }
 }
 
 /* SOCKET */
 function setup(){
 
-socket.on("matched",()=>{
-createPeer(true);
-});
+  socket.on("matched",()=>{
+    createPeer(true);
+  });
 
-socket.on("offer",async o=>{
-createPeer(false);
-await peer.setRemoteDescription(o);
-let ans=await peer.createAnswer();
-await peer.setLocalDescription(ans);
-socket.emit("answer",ans);
-});
+  socket.on("offer",async o=>{
+    createPeer(false);
+    await peer.setRemoteDescription(o);
+    let ans=await peer.createAnswer();
+    await peer.setLocalDescription(ans);
+    socket.emit("answer",ans);
+  });
 
-socket.on("answer",async a=>{
-await peer.setRemoteDescription(a);
-});
+  socket.on("answer",async a=>{
+    await peer.setRemoteDescription(a);
+  });
 
-socket.on("candidate",async c=>{
-if(peer) await peer.addIceCandidate(c);
-});
+  socket.on("candidate",async c=>{
+    if(peer) await peer.addIceCandidate(c);
+  });
 
-socket.on("end",()=>{
-if(peer) peer.close();
-stranger.srcObject=null;
-});
+  socket.on("end",()=>{
+    if(peer) peer.close();
+    stranger.srcObject=null;
+  });
 
-socket.on("message",(m)=>{
-addMsg("Stranger: "+m);
-});
+  socket.on("message",(m)=>{
+    addMsg("Stranger: "+m);
+  });
 
+}
+
+/* EXTRA UI */
+function openPremium(){
+  alert("Premium activated (demo)");
+}
+
+function loadHistory(){
+  socket.emit("getHistory");
 }
 </script>
 
