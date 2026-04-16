@@ -6,101 +6,23 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#0e2a3b;
-  color:white;
-}
-
-/* LOGIN */
-#login{
-  text-align:center;
-  margin-top:80px;
-}
-
-input{
-  display:block;
-  margin:10px auto;
-  padding:12px;
-  width:250px;
-  background:#2d4a6b;
-  border:none;
-  color:white;
-  border-radius:5px;
-}
-
-button{
-  padding:10px 15px;
-  margin:5px;
-  border:none;
-  border-radius:5px;
-  cursor:pointer;
-}
-
+body{margin:0;font-family:sans-serif;background:#0e2a3b;color:white;}
+#login{text-align:center;margin-top:80px;}
+input{display:block;margin:10px auto;padding:12px;width:250px;background:#2d4a6b;border:none;color:white;border-radius:5px;}
+button{padding:10px 15px;margin:5px;border:none;border-radius:5px;cursor:pointer;}
 .red{background:#ff3b3b;color:white;}
 .blue{background:#2d4a6b;color:white;}
 .green{background:#28a745;}
 .yellow{background:#ffc107;}
-.orange{background:#ff9800;}
 .gray{background:#6c757d;}
-
-/* APP */
 #app{display:none;}
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  background:#0b1f2b;
-}
-
-.main{
-  display:flex;
-}
-
-.left{
-  width:50%;
-  padding:20px;
-}
-
-.right{
-  width:50%;
-  background:#ccc;
-  padding:10px;
-}
-
-video{
-  width:100%;
-  height:200px;
-  background:black;
-  border-radius:10px;
-}
-
-.box{
-  margin-bottom:15px;
-}
-
-/* MODAL */
-.modal{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.modal-content{
-  background:white;
-  color:black;
-  padding:20px;
-  border-radius:10px;
-  text-align:center;
-}
+.topbar{display:flex;justify-content:space-between;padding:10px;background:#0b1f2b;}
+.main{display:flex;}
+.left{width:50%;padding:20px;}
+.right{width:50%;background:#ccc;padding:10px;}
+video{width:100%;height:200px;background:black;border-radius:10px;}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;}
+.modal-content{background:white;color:black;padding:20px;border-radius:10px;text-align:center;}
 </style>
 </head>
 
@@ -114,7 +36,7 @@ video{
   <input id="name" placeholder="YOUR NAME">
   <input id="age" placeholder="YOUR AGE (18+)">
 
-  <button class="red" onclick="login()">ENTER</button>
+  <button class="red" onclick="loginUser()">ENTER</button>
 
   <br><br>
 
@@ -138,27 +60,18 @@ video{
 
 <div class="main">
 
-<!-- LEFT -->
 <div class="left">
-
-<div class="box">
   <video id="me" autoplay muted></video>
-</div>
-
-<div class="box">
   <video id="stranger" autoplay></video>
+
+  <div>
+    <button class="green" onclick="start()">START</button>
+    <button class="yellow" onclick="next()">NEXT (-2)</button>
+    <button class="red" onclick="end()">END</button>
+    <button class="gray" onclick="openReport()">REPORT</button>
+  </div>
 </div>
 
-<div>
-  <button class="green" onclick="start()">START</button>
-  <button class="yellow" onclick="next()">NEXT (-2)</button>
-  <button class="red" onclick="end()">END</button>
-  <button class="gray" onclick="openReport()">REPORT</button>
-</div>
-
-</div>
-
-<!-- RIGHT -->
 <div class="right">
   <div id="chat"></div>
   <input id="msg">
@@ -179,22 +92,30 @@ video{
 
 <script>
 
+// DOM FIX
+const me = document.getElementById("me");
+const stranger = document.getElementById("stranger");
+const chat = document.getElementById("chat");
+const msg = document.getElementById("msg");
+const historyList = document.getElementById("historyList");
+const premiumBox = document.getElementById("premiumBox");
+const reportBox = document.getElementById("reportBox");
+
 let socket;
 let coins = 100;
-
 let localStream;
 let peer;
 
-function updateCoins(){
-  document.getElementById("coins").innerText = coins;
-}
+function loginUser(){
 
-function login(){
   let age = document.getElementById("age").value;
+  let name = document.getElementById("name").value;
+
+  if(!name){ alert("Enter name"); return; }
   if(age < 18){ alert("18+ only"); return; }
 
-  login.style.display="none";
-  app.style.display="block";
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
 
   socket = io("https://zuno-app-1.onrender.com");
   setup();
