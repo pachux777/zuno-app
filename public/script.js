@@ -1,28 +1,94 @@
-let gender = "other";
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 
-function setGender(g) {
-  gender = g;
-  console.log("Gender:", gender);
-}
+const app = express();
+const server = http.createServer(app);
 
-function enter() {
-  const name = document.getElementById("name").value;
-  const age = document.getElementById("age").value;
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
 
-  if (!name || !age) {
-    alert("Fill all fields");
-    return;
+app.use(express.static("public"));
+
+let waiting = [];
+
+io.on("connection", (socket) => {
+
+  socket.user = {
+    id: socket.id,
+    history: []
+  };
+
+  function match() {
+    if (waiting.length > 0) {
+      const partner = waiting.shift();
+
+      socket.partner = partner;
+      partner.partner = socket;
+
+      socket.user.history.push(partner.id);
+      partner.user.history.push(socket.id);
+
+      socket.emit("matched");
+      partner.emit("matched");
+    } else {
+      waiting.push(socket);
+    }
   }
 
-  if (age < 18) {
-    alert("You must be 18+");
-    return;
-  }
+  socket.on("start", match);
 
-  localStorage.setItem("name", name);
-  localStorage.setItem("gender", gender);
+  socket.on("message", (msg) => {
+    if (socket.partner) {
+      socket.partner.emit("message", msg);
+    }
+  });
 
-  alert("Login Success ✅");
+  socket.on("next", () => {
+    if (socket.partner) {
+      socket.partner.emit("end");
+      socket.partner.partner = null;
+    }
+    socket.partner = null;
+    match();
+  });
 
-  // later connect to server
-}
+  socket.on("end", () => {
+    if (socket.partner) {
+      socket.partner.emit("end");
+      socket.partner.partner = null;
+    }
+    socket.partner = null;
+  });
+
+  socket.on("getHistory", () => {
+    socket.emit("history", socket.user.history);
+  });
+
+  // 🔥 WEBRTC
+  socket.on("offer", (data) => {
+    if (socket.partner) socket.partner.emit("offer", data);
+  });
+
+  socket.on("answer", (data) => {
+    if (socket.partner) socket.partner.emit("answer", data);
+  });
+
+  socket.on("candidate", (data) => {
+    if (socket.partner) socket.partner.emit("candidate", data);
+  });
+
+  socket.on("disconnect", () => {
+    if (socket.partner) {
+      socket.partner.emit("end");
+      socket.partner.partner = null;
+    }
+    waiting = waiting.filter(s => s !== socket);
+  });
+
+});
+
+server.listen(process.env.PORT || 10000, () => {
+  console.log("Server running");
+});
